@@ -1,0 +1,94 @@
+<!doctype html>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>Shared Worlds Panel</title>
+<style>
+:root{--bg:#f6f5f1;--fg:#1b1b18;--mut:#6b6a63;--line:#d9d6cc;--acc:#2b6a3d;--card:#fff;--bad:#a3302a}
+@media(prefers-color-scheme:dark){:root{--bg:#161614;--fg:#ecebe4;--mut:#9a988e;--line:#33332e;--acc:#6fbf86;--card:#1e1e1b;--bad:#e5796f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2rem 1rem 4rem}
+h1{font-size:1.4rem;margin:0 0 .25rem}h2{font-size:1.05rem;margin:2rem 0 .5rem}
+p,small{color:var(--mut)}code,textarea{font-family:ui-monospace,monospace}
+input,select,textarea,button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);padding:.35rem .6rem;border-radius:4px}
+button{cursor:pointer}button.go{background:var(--acc);color:#fff;border-color:var(--acc)}button.x{color:var(--bad)}
+table{width:100%;border-collapse:collapse}td,th{padding:.4rem .3rem;border-bottom:1px solid var(--line);text-align:left}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.5rem 0}
+textarea{width:100%;min-height:9rem}
+.world{border-top:2px solid var(--fg);margin-top:2rem;padding-top:.5rem}
+#err{color:var(--bad)}
+</style>
+<main>
+<h1>Shared Worlds Panel</h1>
+<p>Membership and mod rules for your worlds. Gateway permissions live only here.</p>
+<div id=login hidden>
+  <p>In game, open Shared Worlds and press Web Panel. The code is copied for you, paste it here.</p>
+  <div class=row><input id=code placeholder="login code" autocomplete=off><button class=go id=go>Sign in</button></div>
+</div>
+<div id=app hidden><div class=row><span id=who></span><button id=out>Sign out</button></div><div id=worlds></div></div>
+<p id=err></p>
+</main>
+<script>
+const $=s=>document.querySelector(s);let tok=sessionStorage.getItem('t');
+const err=m=>$('#err').textContent=m||'';
+async function api(path,opt={}){
+  const r=await fetch(path,{...opt,headers:{'content-type':'application/json',...(tok?{authorization:'Bearer '+tok}:{})}});
+  const j=await r.json().catch(()=>({}));
+  if(r.status==401&&tok){sessionStorage.removeItem('t');tok=null;show();}
+  if(!r.ok)throw new Error(j.error||r.status);
+  return j;
+}
+const send=(m,b)=>({method:m,body:JSON.stringify(b)});
+function show(){$('#login').hidden=!!tok;$('#app').hidden=!tok;if(tok)load();}
+$('#go').onclick=async()=>{err();try{const j=await api('/v1/panel/login',send('POST',{code:$('#code').value}));tok=j.token;sessionStorage.setItem('t',tok);show()}catch(e){err('Code rejected or expired.')}};
+$('#out').onclick=()=>{sessionStorage.removeItem('t');tok=null;show()};
+const hwText=m=>{const h=m.hw;if(!h)return 'no benchmark yet';return 'CPU '+h.cpu+' | '+h.cores+' cores | '+h.heap_mb+' MB heap'+(h.os?' | '+h.os:'')+' | '+new Date(m.seen*1000).toLocaleDateString()};
+const ROLES=['ADMIN','HOST_ELIGIBLE','CLIENT_ONLY'];
+const el=(t,p={},...k)=>{const e=Object.assign(document.createElement(t),p);k.flat().forEach(c=>e.append(c));return e};
+async function load(){
+  const root=$('#worlds');root.replaceChildren();
+  const {worlds}=await api('/v1/worlds').catch(e=>(err(e.message),{worlds:[]}));
+  for(const w of worlds){
+    const sec=el('section',{className:'world'},el('h2',{textContent:w.name}),el('small',{textContent:w.id+'  '+w.state+(w.host?'  hosted by '+w.host:'')}));
+    root.append(sec);
+    if(w.role!=='ADMIN'){sec.append(el('p',{textContent:'You are '+w.role+'. Only admins can change this world.'}));continue}
+    const tb=el('tbody');sec.append(el('h3',{textContent:'Members'}),el('table',{},tb));
+    const reload=async()=>{tb.replaceChildren();const {members}=await api(`/v1/worlds/${w.id}/members`);
+      for(const m of members){
+        const sel=el('select',{},ROLES.map(r=>el('option',{value:r,textContent:r,selected:r===m.role})));
+        sel.onchange=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:m.name,role:sel.value})).then(()=>err()).catch(e=>{err(e.message);reload()});
+        const rm=el('button',{className:'x',textContent:'Remove'});
+        rm.onclick=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:m.name,role:null})).then(reload).catch(e=>err(e.message));
+        tb.append(el('tr',{},el('td',{textContent:m.name}),el('td',{},sel),el('td',{textContent:hwText(m)}),el('td',{},rm)));
+      }};
+    await reload();
+    const nm=el('input',{placeholder:'player name'}),rl=el('select',{},ROLES.slice(1).map(r=>el('option',{value:r,textContent:r}))),add=el('button',{textContent:'Add',className:'go'});
+    add.onclick=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:nm.value,role:rl.value})).then(()=>{nm.value='';reload();err()}).catch(e=>err(e.message==='NO_SUCH_PLAYER_OR_LAST_ADMIN'?'That player has never signed in to this gateway.':e.message));
+    sec.append(el('div',{className:'row'},nm,rl,add));
+    const out=el('code'),inv=el('button',{textContent:'New invite'});
+    inv.onclick=()=>api(`/v1/worlds/${w.id}/invite`,send('POST',{role:rl.value})).then(j=>out.textContent=j.code+'  (single use, role '+rl.value+')').catch(e=>err(e.message));
+    sec.append(el('div',{className:'row'},inv,out));
+    const hb=el('tbody'),hist=async()=>{hb.replaceChildren();const {head,revisions}=await api(`/v1/worlds/${w.id}/revisions`);
+      for(const r of revisions){
+        const go=el('button',{textContent:r.id===head?'Current':'Restore',disabled:r.id===head});
+        go.onclick=()=>{if(!confirm('Restore the world to '+r.id+'? A new save is added on top, nothing is deleted.'))return;
+          api(`/v1/worlds/${w.id}/revert`,send('POST',{rev:r.id})).then(()=>{err('Restored as '+r.id+'.');hist()}).catch(e=>err(e.message==='WORLD_RUNNING'?'The world is being hosted right now. Restore works once everyone has left.':e.message))};
+        hb.append(el('tr',{},el('td',{textContent:'R'+r.seq}),el('td',{textContent:new Date(r.at*1000).toLocaleString()}),el('td',{textContent:r.kind.toLowerCase()+(r.by?' by '+r.by:'')}),el('td',{textContent:r.chunks+' chunks, '+r.files+' files'}),el('td',{},go)));
+      }};
+    hist();
+    sec.append(el('h3',{textContent:'Saves'}),el('p',{textContent:'Every autosave is kept as a step in the history. Restoring adds a new step that matches the old one, so a restore can be undone the same way.'}),el('table',{},hb));
+    const ta=el('textarea',{spellcheck:false}),save=el('button',{textContent:'Save mod rules',className:'go'});
+    api(`/v1/worlds/${w.id}/mods`).then(j=>ta.value=JSON.stringify(j,null,2));
+    save.onclick=()=>{let d;try{d=JSON.parse(ta.value)}catch{return err('Not valid JSON.')}api(`/v1/worlds/${w.id}/mods`,send('PUT',d)).then(()=>err('Saved.')).catch(e=>err(e.message))};
+    const rq=el('tbody'),reqs=async()=>{rq.replaceChildren();const {requests}=await api(`/v1/worlds/${w.id}/mod-requests`);
+      if(!requests.length)rq.append(el('tr',{},el('td',{textContent:'No pending requests.'})));
+      for(const r of requests){
+        const ok=el('button',{textContent:'Allow',className:'go'}),no=el('button',{className:'x',textContent:'Dismiss'});
+        const act=a=>api(`/v1/worlds/${w.id}/mod-requests/resolve`,send('POST',{id:r.id,hash:r.hash,approve:a})).then(()=>{reqs();api(`/v1/worlds/${w.id}/mods`).then(j=>ta.value=JSON.stringify(j,null,2));err()}).catch(e=>err(e.message==='NO_ALLOWLIST'?'This world has no allowlist yet, so there is nothing to extend.':e.message));
+        ok.onclick=()=>act(true);no.onclick=()=>act(false);
+        rq.append(el('tr',{},el('td',{textContent:r.id}),el('td',{textContent:r.hash.slice(0,12)}),el('td',{textContent:r.player+' '+new Date(r.at*1000).toLocaleDateString()}),el('td',{},ok,no)));
+      }};
+    reqs();
+    sec.append(el('h3',{textContent:'Mod rules'}),el('p',{textContent:'Empty object means no restriction. Otherwise hosts must run exactly these mods: {"allow":[{"id":"create","hash":"sha256 of the jar"}],"ignore":["modid"]}. Ignored ids are not compared.'}),ta,el('div',{className:'row'},save),el('h3',{textContent:'Mod requests'}),el('p',{textContent:'Players whose mods blocked them from hosting can ask for them to be allowed. Allow replaces the rule for that mod id with the requested jar hash.'}),el('table',{},rq));
+  }
+}
+show();
+</script>
