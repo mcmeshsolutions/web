@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content=noindex>
+<title>{{title}}</title>
+<style>
+:root{--bg:#f6f5f1;--fg:#1b1b18;--mut:#6b6a63;--line:#d9d6cc;--acc:#2b6a3d}
+@media(prefers-color-scheme:dark){:root{--bg:#161614;--fg:#ecebe4;--mut:#9a988e;--line:#33332e;--acc:#6fbf86}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,sans-serif}
+main{max-width:40rem;margin:0 auto;padding:3rem 1rem 5rem}
+h1{font-size:2rem;margin:0 0 .5rem;letter-spacing:-.02em}
+p,li{color:var(--mut)}li{margin:.4rem 0}b{color:var(--fg)}a{color:var(--acc)}
+.code{font:600 2rem/1 ui-monospace,monospace;letter-spacing:.12em;color:var(--fg);border-top:2px solid var(--fg);border-bottom:1px solid var(--line);padding:1.4rem 0;margin:2rem 0 1rem;user-select:all}
+.code:empty{display:none}
+</style>
+<main>
+<h1>{{title}}</h1>
+<p>{{note}}</p>
+<p class=code>{{code}}</p>
+<ol>
+<li>Install the modpack and the <b>mcmesh</b> mod, see <a href="/">the start page</a>.</li>
+<li>Open <b>Shared Worlds</b> from the title screen and press <b>Redeem</b>.</li>
+<li>Paste the code above, then join the world from the list. A code works once.</li>
+</ol>
+</main>

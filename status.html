@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>Shared Worlds status</title>
+<style>
+:root{--bg:#f6f5f1;--fg:#1b1b18;--mut:#6b6a63;--line:#d9d6cc;--acc:#2b6a3d}
+@media(prefers-color-scheme:dark){:root{--bg:#161614;--fg:#ecebe4;--mut:#9a988e;--line:#33332e;--acc:#6fbf86}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,sans-serif}
+main{max-width:40rem;margin:0 auto;padding:3rem 1rem 5rem}
+h1{font-size:2rem;margin:0 0 .25rem;letter-spacing:-.02em}
+.state{color:var(--acc);font-weight:600;margin:0 0 2.5rem}
+.state svg{width:.7em;height:.7em;margin-right:.45em}
+dl{margin:0;border-top:2px solid var(--fg)}
+dl div{display:flex;justify-content:space-between;gap:1rem;padding:.7rem 0;border-bottom:1px solid var(--line)}
+dt{color:var(--mut)}dd{margin:0;font-variant-numeric:tabular-nums;text-align:right}
+footer{margin-top:2rem;color:var(--mut);font-size:.875rem}a{color:var(--acc)}
+</style>
+<main>
+<h1>Gateway status</h1>
+<p class=state><svg viewBox="0 0 10 10" aria-hidden=true><circle cx=5 cy=5 r=5 fill=currentColor /></svg>Operational</p>
+<dl>
+<div><dt>Worlds stored</dt><dd>{{worlds}}</dd></div>
+<div><dt>Worlds being hosted now</dt><dd>{{hosted}}</dd></div>
+<div><dt>Last world save</dt><dd>{{last_save}}</dd></div>
+<div><dt>Running for</dt><dd>{{uptime}}</dd></div>
+</dl>
+<footer>gatewayd {{version}}. Machine-readable copy at <a href="/v1/status">/v1/status</a>.</footer>
+</main>
