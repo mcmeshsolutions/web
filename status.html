@@ -1,6 +1,7 @@
 <!doctype html>
+<html lang={{lang}}>
 <meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Shared Worlds status</title>
+<title>{{t_title}}</title>
 <style>
 :root{--bg:#f6f5f1;--fg:#1b1b18;--mut:#6b6a63;--line:#d9d6cc;--acc:#2b6a3d}
 @media(prefers-color-scheme:dark){:root{--bg:#161614;--fg:#ecebe4;--mut:#9a988e;--line:#33332e;--acc:#6fbf86}}
@@ -15,13 +16,13 @@ dt{color:var(--mut)}dd{margin:0;font-variant-numeric:tabular-nums;text-align:rig
 footer{margin-top:2rem;color:var(--mut);font-size:.875rem}a{color:var(--acc)}
 </style>
 <main>
-<h1>Gateway status</h1>
-<p class=state><svg viewBox="0 0 10 10" aria-hidden=true><circle cx=5 cy=5 r=5 fill=currentColor /></svg>Operational</p>
+<h1>{{t_h1}}</h1>
+<p class=state><svg viewBox="0 0 10 10" aria-hidden=true><circle cx=5 cy=5 r=5 fill=currentColor /></svg>{{t_ok}}</p>
 <dl>
-<div><dt>Worlds stored</dt><dd>{{worlds}}</dd></div>
-<div><dt>Worlds being hosted now</dt><dd>{{hosted}}</dd></div>
-<div><dt>Last world save</dt><dd>{{last_save}}</dd></div>
-<div><dt>Running for</dt><dd>{{uptime}}</dd></div>
+<div><dt>{{t_worlds}}</dt><dd>{{worlds}}</dd></div>
+<div><dt>{{t_hosted}}</dt><dd>{{hosted}}</dd></div>
+<div><dt>{{t_save}}</dt><dd>{{last_save}}</dd></div>
+<div><dt>{{t_up}}</dt><dd>{{uptime}}</dd></div>
 </dl>
-<footer>gatewayd {{version}}. Machine-readable copy at <a href="/v1/status">/v1/status</a>.</footer>
+<footer>gatewayd {{version}}. {{t_foot}} <a href="/v1/status">/v1/status</a>.</footer>
 </main>
