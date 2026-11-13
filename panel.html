@@ -13,6 +13,7 @@ button{cursor:pointer}button.go{background:var(--acc);color:#fff;border-color:va
 table{width:100%;border-collapse:collapse}td,th{padding:.4rem .3rem;border-bottom:1px solid var(--line);text-align:left}
 .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.5rem 0}
 textarea{width:100%;min-height:9rem}
+td.n,th.n{text-align:right;white-space:nowrap}.over{color:var(--bad);font-weight:600}
 .world{border-top:2px solid var(--fg);margin-top:2rem;padding-top:.5rem}
 #err{color:var(--bad)}
 </style>
@@ -23,7 +24,7 @@ textarea{width:100%;min-height:9rem}
   <p>In game, open Shared Worlds and press Web Panel. The code is copied for you, paste it here.</p>
   <div class=row><input id=code placeholder="login code" autocomplete=off><button class=go id=go>Sign in</button></div>
 </div>
-<div id=app hidden><div class=row><span id=who></span><button id=out>Sign out</button></div><div id=worlds></div></div>
+<div id=app hidden><div class=row><span id=who></span><button id=out>Sign out</button></div><div id=usage hidden></div><div id=worlds></div></div>
 <p id=err></p>
 </main>
 <script>
@@ -43,7 +44,21 @@ $('#out').onclick=()=>{sessionStorage.removeItem('t');tok=null;show()};
 const hwText=m=>{const h=m.hw;if(!h)return 'no benchmark yet';return 'CPU '+h.cpu+' | '+h.cores+' cores | '+h.heap_mb+' MB heap'+(h.os?' | '+h.os:'')+' | '+new Date(m.seen*1000).toLocaleDateString()};
 const ROLES=['ADMIN','HOST_ELIGIBLE','CLIENT_ONLY'];
 const el=(t,p={},...k)=>{const e=Object.assign(document.createElement(t),p);k.flat().forEach(c=>e.append(c));return e};
+const mb=b=>b==null?'-':b>=2**30?(b/2**30).toFixed(1)+' GB':(b/2**20).toFixed(b<2**20*10?1:0)+' MB';
+const vs=(u,l)=>el('td',{className:'n'+(l!=null&&u>l?' over':''),textContent:mb(u)+(l==null?'':' / '+mb(l))});
+async function usage(){
+  const box=$('#usage');box.hidden=true;box.replaceChildren();
+  const j=await api('/v1/admin/usage').catch(()=>null);if(!j)return;
+  const head=(...c)=>el('thead',{},el('tr',{},c.map((t,i)=>el('th',{textContent:t,className:i?'n':''}))));
+  const wr=j.worlds.map(w=>el('tr',{},el('td',{textContent:w.name+(w.owner?' ('+w.owner+')':'')}),vs(w.storage_bytes,w.limits.storage_bytes),el('td',{className:'n',textContent:w.revisions}),vs(w.relay_bytes_month,w.limits.relay_bytes_month)));
+  const ur=j.users.map(u=>el('tr',{},el('td',{textContent:u.name}),vs(u.storage_bytes,u.limits.storage_bytes),el('td',{className:'n',textContent:u.worlds+(u.limits.world_count==null?'':' / '+u.limits.world_count)})));
+  box.append(el('h2',{textContent:'Usage, '+j.month}),el('table',{},head('World','Storage','Saves','Relay this month'),el('tbody',{},wr)),
+    el('p',{textContent:j.total_worlds>j.worlds.length?'Showing the '+j.worlds.length+' largest of '+j.total_worlds+' worlds.':''}),
+    el('table',{},head('Owner','Storage','Worlds'),el('tbody',{},ur)));
+  box.hidden=false;
+}
 async function load(){
+  usage();
   const root=$('#worlds');root.replaceChildren();
   const {worlds}=await api('/v1/worlds').catch(e=>(err(e.message),{worlds:[]}));
   for(const w of worlds){
