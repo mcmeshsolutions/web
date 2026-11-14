@@ -16,6 +16,13 @@ textarea{width:100%;min-height:9rem}
 td.n,th.n{text-align:right;white-space:nowrap}.over{color:var(--bad);font-weight:600}
 .world{border-top:2px solid var(--fg);margin-top:2rem;padding-top:.5rem}
 #err{color:var(--bad)}
+@media(max-width:40rem){
+  table{display:block;max-width:100%;overflow-x:auto}
+  table.members,table.members tbody{display:block;overflow:visible}
+  table.members tr{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .6rem;padding:.5rem 0;border-bottom:1px solid var(--line)}
+  table.members td{border:0;padding:0}
+  table.members td:first-child{flex:1 0 100%;font-weight:600;overflow-wrap:anywhere}
+}
 </style>
 <main>
 <h1>Shared Worlds Panel</h1>
@@ -65,7 +72,7 @@ async function load(){
     const sec=el('section',{className:'world'},el('h2',{textContent:w.name}),el('small',{textContent:w.id+'  '+w.state+(w.host?'  hosted by '+w.host:'')}));
     root.append(sec);
     if(w.role!=='ADMIN'){sec.append(el('p',{textContent:'You are '+w.role+'. Only admins can change this world.'}));continue}
-    const tb=el('tbody');sec.append(el('h3',{textContent:'Members'}),el('table',{},tb));
+    const tb=el('tbody');sec.append(el('h3',{textContent:'Members'}),el('table',{className:'members'},tb));
     const reload=async()=>{tb.replaceChildren();const {members}=await api(`/v1/worlds/${w.id}/members`);
       for(const m of members){
         const sel=el('select',{},ROLES.map(r=>el('option',{value:r,textContent:r,selected:r===m.role})));
