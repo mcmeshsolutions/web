@@ -18,9 +18,9 @@ td.n,th.n{text-align:right;white-space:nowrap}.over{color:var(--bad);font-weight
 #err{color:var(--bad)}
 @media(max-width:40rem){
   table{display:block;max-width:100%;overflow-x:auto}
-  table.members,table.members tbody{display:block;overflow:visible}
-  table.members tr{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .6rem;padding:.5rem 0;border-bottom:1px solid var(--line)}
-  table.members td{border:0;padding:0}
+  table.members,table.members tbody,table.stack,table.stack tbody{display:block;overflow:visible}
+  table.members tr,table.stack tr{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .6rem;padding:.5rem 0;border-bottom:1px solid var(--line)}
+  table.members td,table.stack td{border:0;padding:0}
   table.members td:first-child{flex:1 0 100%;font-weight:600;overflow-wrap:anywhere}
 }
 </style>
@@ -96,7 +96,7 @@ async function load(){
         hb.append(el('tr',{},el('td',{textContent:'R'+r.seq}),el('td',{textContent:new Date(r.at*1000).toLocaleString()}),el('td',{textContent:r.kind.toLowerCase()+(r.by?' by '+r.by:'')}),el('td',{textContent:r.chunks+' chunks, '+r.files+' files'}),el('td',{},go)));
       }};
     hist();
-    sec.append(el('h3',{textContent:'Saves'}),el('p',{textContent:'Every autosave is kept as a step in the history. Restoring adds a new step that matches the old one, so a restore can be undone the same way.'}),el('table',{},hb));
+    sec.append(el('h3',{textContent:'Saves'}),el('p',{textContent:'Every autosave is kept as a step in the history. Restoring adds a new step that matches the old one, so a restore can be undone the same way.'}),el('table',{className:'stack'},hb));
     const ta=el('textarea',{spellcheck:false}),save=el('button',{textContent:'Save mod rules',className:'go'});
     api(`/v1/worlds/${w.id}/mods`).then(j=>ta.value=JSON.stringify(j,null,2));
     save.onclick=()=>{let d;try{d=JSON.parse(ta.value)}catch{return err('Not valid JSON.')}api(`/v1/worlds/${w.id}/mods`,send('PUT',d)).then(()=>err('Saved.')).catch(e=>err(e.message))};
@@ -109,7 +109,7 @@ async function load(){
         rq.append(el('tr',{},el('td',{textContent:r.id}),el('td',{textContent:r.hash.slice(0,12)}),el('td',{textContent:r.player+' '+new Date(r.at*1000).toLocaleDateString()}),el('td',{},ok,no)));
       }};
     reqs();
-    sec.append(el('h3',{textContent:'Mod rules'}),el('p',{textContent:'Empty object means no restriction. Otherwise hosts must run exactly these mods: {"allow":[{"id":"create","hash":"sha256 of the jar"}],"ignore":["modid"]}. Ignored ids are not compared.'}),ta,el('div',{className:'row'},save),el('h3',{textContent:'Mod requests'}),el('p',{textContent:'Players whose mods blocked them from hosting can ask for them to be allowed. Allow replaces the rule for that mod id with the requested jar hash.'}),el('table',{},rq));
+    sec.append(el('h3',{textContent:'Mod rules'}),el('p',{textContent:'Empty object means no restriction. Otherwise hosts must run exactly these mods: {"allow":[{"id":"create","hash":"sha256 of the jar"}],"ignore":["modid"]}. Ignored ids are not compared.'}),ta,el('div',{className:'row'},save),el('h3',{textContent:'Mod requests'}),el('p',{textContent:'Players whose mods blocked them from hosting can ask for them to be allowed. Allow replaces the rule for that mod id with the requested jar hash.'}),el('table',{className:'stack'},rq));
   }
 }
 show();
