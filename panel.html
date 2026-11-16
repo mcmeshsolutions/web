@@ -28,26 +28,27 @@ td.n,th.n{text-align:right;white-space:nowrap}.over{color:var(--bad);font-weight
 <h1>Shared Worlds Panel</h1>
 <p>Membership and mod rules for your worlds. Gateway permissions live only here.</p>
 <div id=login hidden>
-  <p>In game, open Shared Worlds and press Web Panel. The code is copied for you, paste it here.</p>
+  <p>In game, run <code>/meshpanel</code>, or open Shared Worlds and press Web Panel. Either one opens this page signed in; the code below is only needed if you got here another way.</p>
   <div class=row><input id=code placeholder="login code" autocomplete=off><button class=go id=go>Sign in</button></div>
 </div>
 <div id=app hidden><div class=row><span id=who></span><button id=out>Sign out</button></div><div id=usage hidden></div><div id=worlds></div></div>
 <p id=err></p>
 </main>
 <script>
-const $=s=>document.querySelector(s);let tok=sessionStorage.getItem('t');
+const $=s=>document.querySelector(s);let tok=localStorage.getItem('t');
 const err=m=>$('#err').textContent=m||'';
 async function api(path,opt={}){
   const r=await fetch(path,{...opt,headers:{'content-type':'application/json',...(tok?{authorization:'Bearer '+tok}:{})}});
   const j=await r.json().catch(()=>({}));
-  if(r.status==401&&tok){sessionStorage.removeItem('t');tok=null;show();}
+  if(r.status==401&&tok){localStorage.removeItem('t');tok=null;show();}
   if(!r.ok)throw new Error(j.error||r.status);
   return j;
 }
 const send=(m,b)=>({method:m,body:JSON.stringify(b)});
 function show(){$('#login').hidden=!!tok;$('#app').hidden=!tok;if(tok)load();}
-$('#go').onclick=async()=>{err();try{const j=await api('/v1/panel/login',send('POST',{code:$('#code').value}));tok=j.token;sessionStorage.setItem('t',tok);show()}catch(e){err('Code rejected or expired.')}};
-$('#out').onclick=()=>{sessionStorage.removeItem('t');tok=null;show()};
+async function signIn(code){const j=await api('/v1/panel/login',send('POST',{code}));tok=j.token;localStorage.setItem('t',tok);show();}
+$('#go').onclick=async()=>{err();try{await signIn($('#code').value)}catch(e){err('Code rejected or expired.')}};
+$('#out').onclick=()=>{localStorage.removeItem('t');tok=null;show()};
 const hwText=m=>{const h=m.hw;if(!h)return 'no benchmark yet';return 'CPU '+h.cpu+' | '+h.cores+' cores | '+h.heap_mb+' MB heap'+(h.os?' | '+h.os:'')+' | '+new Date(m.seen*1000).toLocaleDateString()};
 const ROLES=['ADMIN','HOST_ELIGIBLE','CLIENT_ONLY'];
 const el=(t,p={},...k)=>{const e=Object.assign(document.createElement(t),p);k.flat().forEach(c=>e.append(c));return e};
@@ -112,5 +113,12 @@ async function load(){
     sec.append(el('h3',{textContent:'Mod rules'}),el('p',{textContent:'Empty object means no restriction. Otherwise hosts must run exactly these mods: {"allow":[{"id":"create","hash":"sha256 of the jar"}],"ignore":["modid"]}. Ignored ids are not compared.'}),ta,el('div',{className:'row'},save),el('h3',{textContent:'Mod requests'}),el('p',{textContent:'Players whose mods blocked them from hosting can ask for them to be allowed. Allow replaces the rule for that mod id with the requested jar hash.'}),el('table',{className:'stack'},rq));
   }
 }
-show();
+// the game opens /panel#code=..., so a code that only lives five minutes never has to be typed by hand
+const fromUrl=new URLSearchParams(location.hash.slice(1)).get('code');
+if(fromUrl){
+  history.replaceState(null,'',location.pathname);
+  signIn(fromUrl).catch(()=>{err('That sign-in link was already used or has expired. Run /meshpanel in game for a new one.');show()});
+}else{
+  show();
+}
 </script>
