@@ -400,6 +400,44 @@ async function renderWorldTab(){
   );
   box.append(headCard);
 
+  // Hosting Control (superadmin only - these endpoints are gateway-admin gated server-side regardless of world role)
+  if(state.me.superadmin){
+    const hostCard=el('div',{className:'card'},el('h2',{textContent:'Hosting Control'}));
+    const unlockBtn=el('button',{className:'x',textContent:'Force Unlock'});
+    unlockBtn.onclick=()=>{
+      if(!confirm(`Force-unlock ${w.name}? This ends the current lease immediately, as if it had expired, and lets a waiting device take over.`))return;
+      api(`/v1/admin/worlds/${w.id}/force-unlock`,send('POST',{})).then(j=>{note(j.unlocked?'World unlocked.':'Nothing was locked.');refreshAll();}).catch(e=>err(e.message));
+    };
+    const ctb=el('tbody');
+    hostCard.append(
+      el('p',{textContent:w.host?`Current host: ${w.host}`:'No host right now (world is idle).'}),
+      el('div',{className:'row'},unlockBtn),
+      el('h3',{textContent:'Online Candidates'}),
+      el('table',{className:'stack'},ctb)
+    );
+    box.append(hostCard);
+    api(`/v1/worlds/${w.id}/candidates`).then(j=>{
+      const cands=j.candidates||[];
+      if(!cands.length){ctb.append(el('tr',{},el('td',{textContent:'No device is currently online and eligible to host this world.'})));return;}
+      for(const c of cands){
+        const label=c.player_name||c.device;
+        const isHost=w.host&&label===w.host;
+        const sw=el('button',{className:'go',textContent:isHost?'Current Host':'Force Switch Host',disabled:isHost});
+        sw.onclick=()=>{
+          if(!confirm(`Force-switch hosting of ${w.name} to ${label}? This ends the current lease, even a healthy one.`))return;
+          api(`/v1/admin/worlds/${w.id}/force-switch-host`,send('POST',{device:c.device})).then(j=>{note('Outcome: '+j.outcome);refreshAll();}).catch(e=>err(e.message));
+        };
+        ctb.append(el('tr',{},
+          el('td',{textContent:label}),
+          el('td',{className:'n',textContent:'tier '+c.tier}),
+          el('td',{className:'n',textContent:c.score.toFixed(2)}),
+          el('td',{className:'n',textContent:c.age_s+'s ago'}),
+          el('td',{},sw)
+        ));
+      }
+    }).catch(()=>{});
+  }
+
   // Grid: Activity/Hosting Time + World MOTD & Policy
   const topGrid=el('div',{className:'grid'});
   const actCard=el('div',{className:'card'},el('h2',{textContent:'Activity & Hosting Time'}));
@@ -700,6 +738,8 @@ async function renderAdminTab(){
       return el('tr',{},
         el('td',{},el('strong',{textContent:w.name}),' ',el('small',{textContent:'('+w.id+')'})),
         el('td',{textContent:w.owner||'-'}),
+        el('td',{textContent:w.state+(w.phase?' / '+w.phase:'')}),
+        el('td',{textContent:w.host||(w.candidates?w.candidates+' waiting':'-')}),
         vs(w.storage_bytes,w.limits.storage_bytes),
         el('td',{className:'n',textContent:w.revisions}),
         vs(w.relay_bytes_month,w.limits.relay_bytes_month),
@@ -708,7 +748,7 @@ async function renderAdminTab(){
       );
     });
     wCard.append(el('table',{},
-      el('thead',{},el('tr',{},el('th',{textContent:'World'}),el('th',{textContent:'Owner'}),el('th',{className:'n',textContent:'Storage'}),el('th',{className:'n',textContent:'Saves'}),el('th',{className:'n',textContent:'Relay this month'}),el('th',{className:'n',textContent:'Commits'}),el('th',{className:'n',textContent:'Actions'}))),
+      el('thead',{},el('tr',{},el('th',{textContent:'World'}),el('th',{textContent:'Owner'}),el('th',{textContent:'State'}),el('th',{textContent:'Host'}),el('th',{className:'n',textContent:'Storage'}),el('th',{className:'n',textContent:'Saves'}),el('th',{className:'n',textContent:'Relay this month'}),el('th',{className:'n',textContent:'Commits'}),el('th',{className:'n',textContent:'Actions'}))),
       el('tbody',{},wr)
     ));
     box.append(wCard);
