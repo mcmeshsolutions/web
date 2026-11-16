@@ -1,21 +1,51 @@
 <!doctype html>
+<html lang=en>
 <meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Shared Worlds Panel</title>
+<title>mcmesh Dashboard</title>
 <style>
-:root{--bg:#f6f5f1;--fg:#1b1b18;--mut:#6b6a63;--line:#d9d6cc;--acc:#2b6a3d;--card:#fff;--bad:#a3302a}
-@media(prefers-color-scheme:dark){:root{--bg:#161614;--fg:#ecebe4;--mut:#9a988e;--line:#33332e;--acc:#6fbf86;--card:#1e1e1b;--bad:#e5796f}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
-main{max-width:46rem;margin:0 auto;padding:2rem 1rem 4rem}
-h1{font-size:1.4rem;margin:0 0 .25rem}h2{font-size:1.05rem;margin:2rem 0 .5rem}
-p,small{color:var(--mut)}code,textarea{font-family:ui-monospace,monospace}
-input,select,textarea,button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);padding:.35rem .6rem;border-radius:4px}
-button{cursor:pointer}button.go{background:var(--acc);color:#fff;border-color:var(--acc)}button.x{color:var(--bad)}
-table{width:100%;border-collapse:collapse}td,th{padding:.4rem .3rem;border-bottom:1px solid var(--line);text-align:left}
+:root{--bg:#f4f3ee;--fg:#181816;--mut:#65645d;--line:#d8d5ca;--acc:#266339;--acc-fg:#fff;--card:#ffffff;--sub:#eeece4;--bad:#a3302a;--warn:#8a5a10;--ok:#1f6b3b}
+@media(prefers-color-scheme:dark){:root{--bg:#131311;--fg:#ecebe4;--mut:#96948a;--line:#2d2d28;--acc:#5cb878;--acc-fg:#0d1a11;--card:#1b1b18;--sub:#22221e;--bad:#e5796f;--warn:#e0a84b;--ok:#68c786}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:74rem;margin:0 auto;padding:1.25rem 1rem 4rem}
+h1{font-size:1.35rem;margin:0}h2{font-size:1.05rem;margin:0 0 .6rem}h3{font-size:.95rem;margin:1rem 0 .4rem}
+p,small{color:var(--mut);margin:.3rem 0}code,textarea,pre{font-family:ui-monospace,monospace;font-size:.88em}
+input,select,textarea,button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);padding:.38rem .65rem;border-radius:6px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px}
+button{cursor:pointer;font-weight:500}
+button.go{background:var(--acc);color:var(--acc-fg);border-color:var(--acc)}
+button.x{color:var(--bad)}
+button.ghost{background:transparent}
+button:disabled{opacity:.45;cursor:default}
+.top{display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;padding-bottom:.85rem;border-bottom:1px solid var(--line);margin-bottom:1rem}
+.brand{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}
+.badge{display:inline-block;padding:.12rem .5rem;border-radius:99px;font-size:.75rem;font-weight:600;background:var(--sub);color:var(--fg);border:1px solid var(--line)}
+.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.warn{color:var(--warn);border-color:var(--warn)}.badge.bad{color:var(--bad);border-color:var(--bad)}
+.tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:1rem;border-bottom:1px solid var(--line);padding-bottom:.5rem}
+.tabs button{border-radius:6px;padding:.4rem .8rem;background:transparent;border:1px solid transparent}
+.tabs button.on{background:var(--card);border-color:var(--line);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1rem;margin-bottom:1rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.75rem;margin-bottom:1rem}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.75rem .9rem}
+.stat .k{font-size:.78rem;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
+.stat .v{font-size:1.35rem;font-weight:700;margin-top:.15rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1rem;margin-bottom:1rem}
 .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.5rem 0}
-textarea{width:100%;min-height:9rem}
-td.n,th.n{text-align:right;white-space:nowrap}.over{color:var(--bad);font-weight:600}
-.world{border-top:2px solid var(--fg);margin-top:2rem;padding-top:.5rem}
-#err{color:var(--bad)}
+.between{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse}
+td,th{padding:.45rem .4rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:.78rem;color:var(--mut);text-transform:uppercase;letter-spacing:.02em;font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap}
+.over{color:var(--bad);font-weight:600}
+textarea{width:100%;min-height:8rem}
+#err{color:var(--bad);font-weight:500;margin:.5rem 0}
+#notice{color:var(--ok);font-weight:500;margin:.5rem 0}
+.mc-preview{background:#151513;color:#e8e6df;padding:.55rem .75rem;border-radius:6px;font-family:ui-monospace,monospace;min-height:2.1rem;white-space:pre-wrap}
+.bar{height:.45rem;background:var(--sub);border-radius:99px;overflow:hidden;min-width:5rem}
+.bar > i{display:block;height:100%;background:var(--acc)}
+.pills{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.85rem}
+.pills button{font-size:.85rem;padding:.3rem .65rem}
+.pills button.on{background:var(--acc);color:var(--acc-fg);border-color:var(--acc)}
 @media(max-width:40rem){
   table{display:block;max-width:100%;overflow-x:auto}
   table.members,table.members tbody,table.stack,table.stack tbody{display:block;overflow:visible}
@@ -25,100 +55,748 @@ td.n,th.n{text-align:right;white-space:nowrap}.over{color:var(--bad);font-weight
 }
 </style>
 <main>
-<h1>Shared Worlds Panel</h1>
-<p>Membership and mod rules for your worlds. Gateway permissions live only here.</p>
-<div id=login hidden>
-  <p>In game, run <code>/meshpanel</code>, or open Shared Worlds and press Web Panel. Either one opens this page signed in; the code below is only needed if you got here another way.</p>
-  <div class=row><input id=code placeholder="login code" autocomplete=off><button class=go id=go>Sign in</button></div>
-</div>
-<div id=app hidden><div class=row><span id=who></span><button id=out>Sign out</button></div><div id=usage hidden></div><div id=worlds></div></div>
+<header class=top>
+  <div class=brand>
+    <h1>mcmesh Dashboard</h1>
+    <span id=role-badge class=badge hidden></span>
+  </div>
+  <div id=user-bar class=row hidden>
+    <span id=who></span>
+    <button id=out>Sign out</button>
+  </div>
+</header>
+
 <p id=err></p>
+<p id=notice></p>
+
+<div id=login hidden>
+  <div class=grid>
+    <section class=card>
+      <h2>SSO Account</h2>
+      <p>Sign in with your dashboard email and password. Link your Minecraft account once and never type 5-minute login codes again. The first account registered on a fresh gateway starts as superadmin.</p>
+      <div class=row>
+        <input id=sso-email type=email placeholder="you@example.com" autocomplete=username style="flex:1;min-width:12rem">
+        <input id=sso-pass type=password placeholder="password (min 8 chars)" autocomplete=current-password style="flex:1;min-width:12rem">
+      </div>
+      <div class=row>
+        <button class=go id=sso-login>Sign in</button>
+        <button id=sso-reg>Create account</button>
+      </div>
+    </section>
+    <section class=card>
+      <h2>In-Game One-Time Code</h2>
+      <p>In game, run <code>/meshpanel</code>, or open Shared Worlds and press Web Panel. Either one opens this page signed in; paste a code below if you copied it manually.</p>
+      <div class=row>
+        <input id=code placeholder="login code" autocomplete=off style="flex:1">
+        <button class=go id=go>Sign in with code</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id=app hidden>
+  <nav class=tabs id=nav>
+    <button data-tab=overview class=on>Overview</button>
+    <button data-tab=world>World Inspector</button>
+    <button data-tab=account>Account &amp; Devices</button>
+    <button data-tab=admin id=tab-admin-btn hidden>Superadmin</button>
+  </nav>
+
+  <section id=tab-overview></section>
+  <section id=tab-world hidden></section>
+  <section id=tab-account hidden></section>
+  <section id=tab-admin hidden></section>
+</div>
 </main>
 <script>
-const $=s=>document.querySelector(s);let tok=localStorage.getItem('t');
-const err=m=>$('#err').textContent=m||'';
+const $=s=>document.querySelector(s);
+let tok=localStorage.getItem('t');
+let state={me:null,worlds:[],usage:null,motd:'',activeTab:'overview',selectedWorld:null};
+
+const err=m=>{$('#err').textContent=m||'';if(m)$('#notice').textContent='';};
+const note=m=>{$('#notice').textContent=m||'';if(m)$('#err').textContent='';};
+
 async function api(path,opt={}){
-  const r=await fetch(path,{...opt,headers:{'content-type':'application/json',...(tok?{authorization:'Bearer '+tok}:{})}});
+  const headers={'x-mesh-client':'1',...(opt.raw?{}:{'content-type':'application/json'}),...(tok?{authorization:'Bearer '+tok}:{}),...(opt.headers||{})};
+  const r=await fetch(path,{credentials:'same-origin',...opt,headers});
+  if(opt.text){
+    if(r.status===404)return null;
+    if(!r.ok)throw new Error(r.status+'');
+    return await r.text();
+  }
   const j=await r.json().catch(()=>({}));
-  if(r.status==401&&tok){localStorage.removeItem('t');tok=null;show();}
   if(!r.ok)throw new Error(j.error||r.status);
   return j;
 }
 const send=(m,b)=>({method:m,body:JSON.stringify(b)});
-function show(){$('#login').hidden=!!tok;$('#app').hidden=!tok;if(tok)load();}
-async function signIn(code){const j=await api('/v1/panel/login',send('POST',{code}));tok=j.token;localStorage.setItem('t',tok);show();}
-$('#go').onclick=async()=>{err();try{await signIn($('#code').value)}catch(e){err('Code rejected or expired.')}};
-$('#out').onclick=()=>{localStorage.removeItem('t');tok=null;show()};
-const hwText=m=>{const h=m.hw;if(!h)return 'no benchmark yet';return 'CPU '+h.cpu+' | '+h.cores+' cores | '+h.heap_mb+' MB heap'+(h.os?' | '+h.os:'')+' | '+new Date(m.seen*1000).toLocaleDateString()};
-const ROLES=['ADMIN','HOST_ELIGIBLE','CLIENT_ONLY'];
-const el=(t,p={},...k)=>{const e=Object.assign(document.createElement(t),p);k.flat().forEach(c=>e.append(c));return e};
-const mb=b=>b==null?'-':b>=2**30?(b/2**30).toFixed(1)+' GB':(b/2**20).toFixed(b<2**20*10?1:0)+' MB';
+const el=(t,p={},...k)=>{const e=Object.assign(document.createElement(t),p);k.flat().forEach(c=>{if(c!=null&&c!==false)e.append(c)});return e};
+const mb=b=>b==null?'-':b>=2**30?(b/2**30).toFixed(2)+' GB':(b/2**20).toFixed(b<2**20*10?1:0)+' MB';
+const dur=s=>{s=Number(s||0);if(s<=0)return '0s';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return (h?h+'h ':'')+(m?m+'m ':'')+(sec||(!h&&!m)?sec+'s':'').trim()};
 const vs=(u,l)=>el('td',{className:'n'+(l!=null&&u>l?' over':''),textContent:mb(u)+(l==null?'':' / '+mb(l))});
-async function usage(){
-  const box=$('#usage');box.hidden=true;box.replaceChildren();
-  const j=await api('/v1/admin/usage').catch(()=>null);if(!j)return;
-  const head=(...c)=>el('thead',{},el('tr',{},c.map((t,i)=>el('th',{textContent:t,className:i?'n':''}))));
-  const wr=j.worlds.map(w=>el('tr',{},el('td',{textContent:w.name+(w.owner?' ('+w.owner+')':'')}),vs(w.storage_bytes,w.limits.storage_bytes),el('td',{className:'n',textContent:w.revisions}),vs(w.relay_bytes_month,w.limits.relay_bytes_month)));
-  const ur=j.users.map(u=>el('tr',{},el('td',{textContent:u.name}),vs(u.storage_bytes,u.limits.storage_bytes),el('td',{className:'n',textContent:u.worlds+(u.limits.world_count==null?'':' / '+u.limits.world_count)})));
-  box.append(el('h2',{textContent:'Usage, '+j.month}),el('table',{},head('World','Storage','Saves','Relay this month'),el('tbody',{},wr)),
-    el('p',{textContent:j.total_worlds>j.worlds.length?'Showing the '+j.worlds.length+' largest of '+j.total_worlds+' worlds.':''}),
-    el('table',{},head('Owner','Storage','Worlds'),el('tbody',{},ur)));
-  box.hidden=false;
-}
-async function load(){
-  usage();
-  const root=$('#worlds');root.replaceChildren();
-  const {worlds}=await api('/v1/worlds').catch(e=>(err(e.message),{worlds:[]}));
-  for(const w of worlds){
-    const sec=el('section',{className:'world'},el('h2',{textContent:w.name}),el('small',{textContent:w.id+'  '+w.state+(w.host?'  hosted by '+w.host:'')}));
-    root.append(sec);
-    if(w.role!=='ADMIN'){sec.append(el('p',{textContent:'You are '+w.role+'. Only admins can change this world.'}));continue}
-    const tb=el('tbody');sec.append(el('h3',{textContent:'Members'}),el('table',{className:'members'},tb));
-    const reload=async()=>{tb.replaceChildren();const {members}=await api(`/v1/worlds/${w.id}/members`);
-      for(const m of members){
-        const sel=el('select',{},ROLES.map(r=>el('option',{value:r,textContent:r,selected:r===m.role})));
-        sel.onchange=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:m.name,role:sel.value})).then(()=>err()).catch(e=>{err(e.message);reload()});
-        const rm=el('button',{className:'x',textContent:'Remove'});
-        rm.onclick=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:m.name,role:null})).then(reload).catch(e=>err(e.message));
-        tb.append(el('tr',{},el('td',{textContent:m.name}),el('td',{},sel),el('td',{textContent:hwText(m)}),el('td',{},rm)));
-      }};
-    await reload();
-    const nm=el('input',{placeholder:'player name'}),rl=el('select',{},ROLES.slice(1).map(r=>el('option',{value:r,textContent:r}))),add=el('button',{textContent:'Add',className:'go'});
-    add.onclick=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:nm.value,role:rl.value})).then(()=>{nm.value='';reload();err()}).catch(e=>err(e.message==='NO_SUCH_PLAYER_OR_LAST_ADMIN'?'That player has never signed in to this gateway.':e.message));
-    sec.append(el('div',{className:'row'},nm,rl,add));
-    const out=el('code'),inv=el('button',{textContent:'New invite'});
-    inv.onclick=()=>api(`/v1/worlds/${w.id}/invite`,send('POST',{role:rl.value})).then(j=>out.textContent=j.code+'  (single use, role '+rl.value+')').catch(e=>err(e.message));
-    sec.append(el('div',{className:'row'},inv,out));
-    const hb=el('tbody'),hist=async()=>{hb.replaceChildren();const {head,revisions}=await api(`/v1/worlds/${w.id}/revisions`);
-      for(const r of revisions){
-        const go=el('button',{textContent:r.id===head?'Current':'Restore',disabled:r.id===head});
-        go.onclick=()=>{if(!confirm('Restore the world to '+r.id+'? A new save is added on top, nothing is deleted.'))return;
-          api(`/v1/worlds/${w.id}/revert`,send('POST',{rev:r.id})).then(()=>{err('Restored as '+r.id+'.');hist()}).catch(e=>err(e.message==='WORLD_RUNNING'?'The world is being hosted right now. Restore works once everyone has left.':e.message))};
-        hb.append(el('tr',{},el('td',{textContent:'R'+r.seq}),el('td',{textContent:new Date(r.at*1000).toLocaleString()}),el('td',{textContent:r.kind.toLowerCase()+(r.by?' by '+r.by:'')}),el('td',{textContent:r.chunks+' chunks, '+r.files+' files'}),el('td',{},go)));
-      }};
-    hist();
-    sec.append(el('h3',{textContent:'Saves'}),el('p',{textContent:'Every autosave is kept as a step in the history. Restoring adds a new step that matches the old one, so a restore can be undone the same way.'}),el('table',{className:'stack'},hb));
-    const ta=el('textarea',{spellcheck:false}),save=el('button',{textContent:'Save mod rules',className:'go'});
-    api(`/v1/worlds/${w.id}/mods`).then(j=>ta.value=JSON.stringify(j,null,2));
-    save.onclick=()=>{let d;try{d=JSON.parse(ta.value)}catch{return err('Not valid JSON.')}api(`/v1/worlds/${w.id}/mods`,send('PUT',d)).then(()=>err('Saved.')).catch(e=>err(e.message))};
-    const rq=el('tbody'),reqs=async()=>{rq.replaceChildren();const {requests}=await api(`/v1/worlds/${w.id}/mod-requests`);
-      if(!requests.length)rq.append(el('tr',{},el('td',{textContent:'No pending requests.'})));
-      for(const r of requests){
-        const ok=el('button',{textContent:'Allow',className:'go'}),no=el('button',{className:'x',textContent:'Dismiss'});
-        const act=a=>api(`/v1/worlds/${w.id}/mod-requests/resolve`,send('POST',{id:r.id,hash:r.hash,approve:a})).then(()=>{reqs();api(`/v1/worlds/${w.id}/mods`).then(j=>ta.value=JSON.stringify(j,null,2));err()}).catch(e=>err(e.message==='NO_ALLOWLIST'?'This world has no allowlist yet, so there is nothing to extend.':e.message));
-        ok.onclick=()=>act(true);no.onclick=()=>act(false);
-        rq.append(el('tr',{},el('td',{textContent:r.id}),el('td',{textContent:r.hash.slice(0,12)}),el('td',{textContent:r.player+' '+new Date(r.at*1000).toLocaleDateString()}),el('td',{},ok,no)));
-      }};
-    reqs();
-    sec.append(el('h3',{textContent:'Mod rules'}),el('p',{textContent:'Empty object means no restriction. Otherwise hosts must run exactly these mods: {"allow":[{"id":"create","hash":"sha256 of the jar"}],"ignore":["modid"]}. Ignored ids are not compared.'}),ta,el('div',{className:'row'},save),el('h3',{textContent:'Mod requests'}),el('p',{textContent:'Players whose mods blocked them from hosting can ask for them to be allowed. Allow replaces the rule for that mod id with the requested jar hash.'}),el('table',{className:'stack'},rq));
+const hwText=m=>{const h=m.hw;if(!h)return 'no benchmark yet';return 'CPU '+h.cpu+' | '+h.cores+' cores | '+h.heap_mb+' MB heap'+(h.os?' | '+h.os:'')+(m.seen?' | '+new Date(m.seen*1000).toLocaleDateString():'')};
+const ROLES=['ADMIN','HOST_ELIGIBLE','CLIENT_ONLY'];
+
+const MC_COLORS={'0':'#000000','1':'#0000aa','2':'#00aa00','3':'#00aaaa','4':'#aa0000','5':'#aa00aa','6':'#ffaa00','7':'#aaaaaa','8':'#555555','9':'#5555ff','a':'#55ff55','b':'#55ffff','c':'#ff5555','d':'#ff55ff','e':'#ffff55','f':'#ffffff'};
+function renderMotd(box,str){
+  box.replaceChildren();
+  if(!str){box.append(el('span',{style:'color:#888',textContent:'(no MOTD set)'}));return;}
+  let cur={color:'#ffffff',b:false,i:false,u:false,s:false};
+  let buf='';
+  const flush=()=>{
+    if(!buf)return;
+    const sp=el('span',{textContent:buf});
+    let st=`color:${cur.color};`;
+    if(cur.b)st+='font-weight:700;';
+    if(cur.i)st+='font-style:italic;';
+    if(cur.u||cur.s)st+=`text-decoration:${cur.u?'underline':''} ${cur.s?'line-through':''};`;
+    sp.setAttribute('style',st);
+    box.append(sp);
+    buf='';
+  };
+  for(let i=0;i<str.length;i++){
+    const c=str[i];
+    if((c==='\u00a7'||c==='&')&&i+1<str.length){
+      const k=str[i+1].toLowerCase();
+      if(MC_COLORS[k]){flush();cur={color:MC_COLORS[k],b:false,i:false,u:false,s:false};i++;continue;}
+      if(k==='l'){flush();cur.b=true;i++;continue;}
+      if(k==='o'){flush();cur.i=true;i++;continue;}
+      if(k==='n'){flush();cur.u=true;i++;continue;}
+      if(k==='m'){flush();cur.s=true;i++;continue;}
+      if(k==='r'){flush();cur={color:'#ffffff',b:false,i:false,u:false,s:false};i++;continue;}
+    }
+    buf+=c;
   }
+  flush();
 }
+function unformatMotd(s){return (s||'').replace(/\u00a7([0-9a-fklmnor])/gi,'&$1');}
+
+function setTab(name){
+  state.activeTab=name;
+  for(const b of $('#nav').querySelectorAll('button')){
+    b.classList.toggle('on',b.dataset.tab===name);
+  }
+  for(const t of ['overview','world','account','admin']){
+    $('#tab-'+t).hidden=(t!==name);
+  }
+  if(name==='world')renderWorldTab();
+  if(name==='account')renderAccountTab();
+  if(name==='admin')renderAdminTab();
+}
+for(const b of $('#nav').querySelectorAll('button')){
+  b.onclick=()=>setTab(b.dataset.tab);
+}
+
+async function signIn(code){
+  const j=await api('/v1/panel/login',send('POST',{code}));
+  tok=j.token;localStorage.setItem('t',tok);
+  await boot();
+}
+$('#go').onclick=async()=>{err();try{await signIn($('#code').value)}catch(e){err('Code rejected or expired.')}};
+$('#sso-login').onclick=async()=>{
+  err();
+  try{
+    await api('/v1/auth/sso/login',send('POST',{email:$('#sso-email').value.trim(),password:$('#sso-pass').value}));
+    $('#sso-pass').value='';
+    await boot();
+  }catch(e){err(e.message==='UNAUTHORIZED'?'Wrong email or password.':e.message);}
+};
+$('#sso-reg').onclick=async()=>{
+  err();
+  try{
+    await api('/v1/auth/sso/register',send('POST',{email:$('#sso-email').value.trim(),password:$('#sso-pass').value}));
+    $('#sso-pass').value='';
+    await boot();
+  }catch(e){err(e.message==='EMAIL_TAKEN'?'That email is already registered.':e.message);}
+};
+$('#out').onclick=async()=>{
+  err();note();
+  await api('/v1/auth/sso/logout',send('POST',{})).catch(()=>{});
+  localStorage.removeItem('t');tok=null;state.me=null;
+  showLoggedOut();
+};
+
+function showLoggedOut(){
+  $('#login').hidden=false;
+  $('#app').hidden=true;
+  $('#user-bar').hidden=true;
+  $('#role-badge').hidden=true;
+}
+
+async function boot(){
+  err();
+  const me=await api('/v1/sso/me').catch(()=>null);
+  if(!me){
+    if(tok){localStorage.removeItem('t');tok=null;}
+    showLoggedOut();
+    return;
+  }
+  state.me=me;
+  // If user signed in with SSO AND still has a /meshpanel Bearer token, offer or auto-link if no player linked yet
+  if(me.mode==='sso'&&tok&&(!me.linked||!me.linked.length)){
+    const linked=await api('/v1/sso/link',send('POST',{code:''})).catch(()=>null);
+    if(linked&&linked.ok){
+      note('Linked your in-game account ('+(linked.player||linked.uuid)+') to your SSO account.');
+      state.me=await api('/v1/sso/me').catch(()=>me);
+    }
+  }
+  $('#login').hidden=true;
+  $('#app').hidden=false;
+  $('#user-bar').hidden=false;
+  const whoParts=[];
+  if(state.me.email)whoParts.push(state.me.email);
+  if(state.me.linked&&state.me.linked.length){
+    whoParts.push('MC: '+state.me.linked.map(x=>x.name).join(', '));
+  }
+  $('#who').textContent=whoParts.join(' · ')||'Signed in';
+  const rb=$('#role-badge');
+  if(state.me.superadmin){
+    rb.textContent='SUPERADMIN';rb.className='badge ok';rb.hidden=false;
+    $('#tab-admin-btn').hidden=false;
+  }else{
+    rb.textContent=state.me.mode==='sso'?'SSO':'TOKEN';rb.className='badge';rb.hidden=false;
+    $('#tab-admin-btn').hidden=true;
+    if(state.activeTab==='admin')state.activeTab='overview';
+  }
+  await refreshAll();
+}
+
+async function refreshAll(){
+  const [wRes,mRes,uRes]=await Promise.all([
+    api('/v1/worlds?all=1').catch(()=>({worlds:[]})),
+    api('/v1/motd').catch(()=>({motd:null})),
+    state.me.superadmin?api('/v1/admin/usage').catch(()=>null):Promise.resolve(null),
+  ]);
+  state.worlds=wRes.worlds||[];
+  state.motd=mRes.motd||'';
+  state.usage=uRes;
+  if(!state.selectedWorld&&state.worlds.length){
+    state.selectedWorld=state.worlds[0].id;
+  }else if(state.selectedWorld&&!state.worlds.some(w=>w.id===state.selectedWorld)){
+    state.selectedWorld=state.worlds[0]?.id||null;
+  }
+  renderOverviewTab();
+  if(state.activeTab==='world')renderWorldTab();
+  if(state.activeTab==='account')renderAccountTab();
+  if(state.activeTab==='admin')renderAdminTab();
+}
+
+function renderOverviewTab(){
+  const box=$('#tab-overview');
+  box.replaceChildren();
+  const liveCount=state.worlds.filter(w=>w.state!=='IDLE').length;
+  const playersNow=state.worlds.reduce((a,w)=>a+(w.host_players||0),0);
+  const totalBytes=state.usage?state.usage.worlds.reduce((a,w)=>a+(w.storage_bytes||0),0):null;
+  const totalRelay=state.usage?state.usage.worlds.reduce((a,w)=>a+(w.relay_bytes_month||0),0):null;
+
+  const stats=el('div',{className:'stats'},
+    el('div',{className:'stat'},el('div',{className:'k',textContent:'Worlds'}),el('div',{className:'v',textContent:state.worlds.length+' ('+liveCount+' live)'})),
+    el('div',{className:'stat'},el('div',{className:'k',textContent:'Players Online'}),el('div',{className:'v',textContent:String(playersNow)})),
+    state.usage?el('div',{className:'stat'},el('div',{className:'k',textContent:'Total Storage'}),el('div',{className:'v',textContent:mb(totalBytes)})):null,
+    state.usage?el('div',{className:'stat'},el('div',{className:'k',textContent:'Relay ('+state.usage.month+')'}),el('div',{className:'v',textContent:mb(totalRelay)})):null,
+  );
+  box.append(stats);
+
+  // Gateway MOTD card
+  const motdCard=el('div',{className:'card'});
+  const prev=el('div',{className:'mc-preview'});
+  renderMotd(prev,state.motd);
+  motdCard.append(el('h2',{textContent:'Gateway MOTD'}),prev);
+  if(state.me.superadmin){
+    const inp=el('input',{value:unformatMotd(state.motd),placeholder:'&aWelcome to &lCreate Full Stack&r! (supports &0-&f, &l, &o, &n, &m, &r)',style:'flex:1;min-width:16rem'});
+    inp.oninput=()=>renderMotd(prev,inp.value);
+    const save=el('button',{className:'go',textContent:'Save Gateway MOTD'});
+    save.onclick=async()=>{
+      err();
+      try{
+        await api('/v1/admin/motd',send('PUT',{motd:inp.value}));
+        note('Gateway MOTD updated.');
+        await refreshAll();
+      }catch(e){err(e.message);}
+    };
+    motdCard.append(el('div',{className:'row'},inp,save));
+  }
+  box.append(motdCard);
+
+  // Worlds overview table
+  const wCard=el('div',{className:'card'});
+  wCard.append(el('div',{className:'between'},
+    el('h2',{textContent:state.me.superadmin?'All Worlds on Gateway':'Your Shared Worlds'}),
+    el('button',{textContent:'Refresh',onclick:()=>refreshAll()})
+  ));
+  if(!state.worlds.length){
+    wCard.append(el('p',{textContent:'No worlds found. Join or create a world in game, or link your Minecraft account under Account & Devices.'}));
+  }else{
+    const tb=el('tbody');
+    for(const w of state.worlds){
+      const inspect=el('button',{className:'go',textContent:'Inspect'});
+      inspect.onclick=()=>{state.selectedWorld=w.id;setTab('world');};
+      const stBadge=el('span',{className:'badge '+(w.state==='IDLE'?'':'ok'),textContent:w.state+(w.host?' · '+w.host:'')});
+      const uWorld=state.usage?.worlds?.find(x=>x.id===w.id);
+      tb.append(el('tr',{},
+        el('td',{},el('strong',{textContent:w.name}),el('br'),el('small',{textContent:w.id+(w.pack&&w.pack!=='default'?' · '+w.pack:'')})),
+        el('td',{textContent:w.owner||'-'}),
+        el('td',{},stBadge),
+        el('td',{className:'n',textContent:w.host_players!=null?String(w.host_players):'-'}),
+        uWorld?vs(uWorld.storage_bytes,uWorld.limits?.storage_bytes):el('td',{className:'n',textContent:'-'}),
+        el('td',{},el('span',{className:'badge',textContent:w.role})),
+        el('td',{className:'n'},inspect)
+      ));
+    }
+    wCard.append(el('table',{},
+      el('thead',{},el('tr',{},
+        el('th',{textContent:'World'}),
+        el('th',{textContent:'Owner'}),
+        el('th',{textContent:'Status / Host'}),
+        el('th',{className:'n',textContent:'Players'}),
+        el('th',{className:'n',textContent:'Storage'}),
+        el('th',{textContent:'Role'}),
+        el('th',{className:'n',textContent:''})
+      )),
+      tb
+    ));
+  }
+  box.append(wCard);
+}
+
+async function renderWorldTab(){
+  const box=$('#tab-world');
+  box.replaceChildren();
+  if(!state.worlds.length){
+    box.append(el('div',{className:'card'},el('p',{textContent:'No worlds available to inspect.'})));
+    return;
+  }
+  const pills=el('div',{className:'pills'});
+  for(const w of state.worlds){
+    const b=el('button',{className:w.id===state.selectedWorld?'on':'',textContent:w.name+' ('+w.state+')'});
+    b.onclick=()=>{state.selectedWorld=w.id;renderWorldTab();};
+    pills.append(b);
+  }
+  box.append(pills);
+
+  const w=state.worlds.find(x=>x.id===state.selectedWorld)||state.worlds[0];
+  state.selectedWorld=w.id;
+  const canAdmin=(w.role==='ADMIN'||state.me.superadmin);
+
+  // Header card for world
+  const dlBtn=el('button',{textContent:'Download .zip'});
+  dlBtn.onclick=async()=>{
+    err();
+    try{
+      const r=await fetch(`/v1/worlds/${w.id}/export.zip`,{headers:{'x-mesh-client':'1','x-mesh-pack':w.pack||'default',...(tok?{authorization:'Bearer '+tok}:{})}});
+      if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||r.status);}
+      const blob=await r.blob();
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);a.download=w.id+'.zip';a.click();
+    }catch(e){err(e.message);}
+  };
+  const headCard=el('div',{className:'card'},
+    el('div',{className:'between'},
+      el('div',{},
+        el('h2',{textContent:w.name}),
+        el('small',{textContent:`ID: ${w.id} · MC ${w.mc_version} · Pack: ${w.pack||'default'} · State: ${w.state}`+(w.host?` · Hosted by ${w.host}`:'')+(w.owner?` · Owner: ${w.owner}`:'')})
+      ),
+      canAdmin?dlBtn:null
+    )
+  );
+  box.append(headCard);
+
+  // Grid: Activity/Hosting Time + World MOTD & Policy
+  const topGrid=el('div',{className:'grid'});
+  const actCard=el('div',{className:'card'},el('h2',{textContent:'Activity & Hosting Time'}));
+  const polCard=el('div',{className:'card'},el('h2',{textContent:'World MOTD & Policy'}));
+  topGrid.append(actCard,polCard);
+  box.append(topGrid);
+
+  // Load Activity & Hosting Time
+  (async()=>{
+    const act=await api(`/v1/worlds/${w.id}/activity`).catch(()=>null);
+    if(!act){
+      actCard.append(el('p',{textContent:'Hosting activity is visible to the world owner and gateway admins.'}));
+    }else if(!act.players||!act.players.length){
+      actCard.append(el('p',{textContent:'No completed hosting sessions recorded yet.'}));
+    }else{
+      const totalS=act.players.reduce((a,p)=>a+(p.seconds||0),0)||1;
+      const tb=el('tbody');
+      for(const p of act.players){
+        const pct=Math.round(((p.seconds||0)/totalS)*100);
+        const bar=el('div',{className:'bar'},el('i',{style:`width:${pct}%`}));
+        tb.append(el('tr',{},
+          el('td',{textContent:p.name||p.uuid||'(unknown)'}),
+          el('td',{className:'n',textContent:dur(p.seconds)}),
+          el('td',{className:'n',textContent:String(p.sessions)}),
+          el('td',{},bar)
+        ));
+      }
+      actCard.append(el('table',{},
+        el('thead',{},el('tr',{},el('th',{textContent:'Player'}),el('th',{className:'n',textContent:'Hosted Time'}),el('th',{className:'n',textContent:'Sessions'}),el('th',{textContent:'Share'}))),
+        tb
+      ));
+    }
+    const aud=await api(`/v1/worlds/${w.id}/audit?limit=8`).catch(()=>null);
+    if(aud&&aud.entries&&aud.entries.length){
+      actCard.append(el('h3',{textContent:'Recent Events'}));
+      const atb=el('tbody');
+      for(const e of aud.entries){
+        atb.append(el('tr',{},
+          el('td',{textContent:new Date(e.ts*1000).toLocaleString()}),
+          el('td',{textContent:e.action}),
+          el('td',{textContent:e.actor_name||e.actor||'-'}),
+          el('td',{textContent:e.target||''})
+        ));
+      }
+      actCard.append(el('table',{},atb));
+    }
+  })();
+
+  // Load World MOTD & Policy
+  (async()=>{
+    const wMotd=(await api(`/v1/worlds/${w.id}/aux/settings/motd`,{text:true}).catch(()=>null))||'';
+    const prev=el('div',{className:'mc-preview'});
+    renderMotd(prev,wMotd);
+    polCard.append(el('h3',{textContent:'World MOTD'}),prev);
+    if(canAdmin){
+      const inp=el('input',{value:unformatMotd(wMotd),placeholder:'&bWorld MOTD (supports & color codes)',style:'flex:1;min-width:12rem'});
+      inp.oninput=()=>renderMotd(prev,inp.value);
+      const save=el('button',{className:'go',textContent:'Save MOTD'});
+      save.onclick=async()=>{
+        err();
+        try{
+          await api(`/v1/worlds/${w.id}/aux/settings/motd`,{method:'PUT',raw:true,headers:{'content-type':'application/octet-stream'},body:inp.value});
+          note('World MOTD saved.');
+        }catch(e){err(e.message);}
+      };
+      polCard.append(el('div',{className:'row'},inp,save));
+    }
+    const pol=await api(`/v1/worlds/${w.id}/policy`).catch(()=>null);
+    if(pol){
+      polCard.append(el('h3',{textContent:'Hosting Policy'}));
+      const sel=el('select',{disabled:!canAdmin},['MEMBERS','OWNER','ALLOWLIST'].map(p=>el('option',{value:p,textContent:p,selected:p===pol.policy})));
+      const sigChk=el('input',{type:'checkbox',checked:!!pol.require_signed,disabled:!canAdmin});
+      const voteChk=el('input',{type:'checkbox',checked:!!pol.handover_vote,disabled:!canAdmin});
+      sel.onchange=()=>api(`/v1/worlds/${w.id}/policy`,send('PUT',{policy:sel.value})).then(()=>note('Host policy updated.')).catch(e=>err(e.message));
+      sigChk.onchange=()=>api(`/v1/worlds/${w.id}/signing`,send('PUT',{require_signed:sigChk.checked})).then(()=>note('Commit signing rule updated.')).catch(e=>err(e.message));
+      voteChk.onchange=()=>api(`/v1/worlds/${w.id}/vote-policy`,send('PUT',{enabled:voteChk.checked})).then(()=>note('Handover vote updated.')).catch(e=>err(e.message));
+      polCard.append(
+        el('div',{className:'row'},el('span',{textContent:'Who may host:'}),sel),
+        el('div',{className:'row'},el('label',{},sigChk,' Require signed host commits')),
+        el('div',{className:'row'},el('label',{},voteChk,' Allow guest handover votes (/meshvote)'))
+      );
+    }
+  })();
+
+  if(!canAdmin){
+    box.append(el('div',{className:'card'},el('p',{textContent:'You are '+w.role+' on this world. Only world admins or gateway superadmins can edit members, restores, or mod rules.'})));
+    return;
+  }
+
+  // Members & Invites card
+  const memCard=el('div',{className:'card'},el('h2',{textContent:'Members & Invites'}));
+  const tb=el('tbody');
+  memCard.append(el('table',{className:'members'},tb));
+  const reloadMembers=async()=>{
+    tb.replaceChildren();
+    const {members}=await api(`/v1/worlds/${w.id}/members`).catch(()=>({members:[]}));
+    for(const m of members){
+      const sel=el('select',{},ROLES.map(r=>el('option',{value:r,textContent:r,selected:r===m.role})));
+      sel.onchange=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:m.name,role:sel.value})).then(()=>note('Role updated.')).catch(e=>{err(e.message);reloadMembers()});
+      const rm=el('button',{className:'x',textContent:'Remove'});
+      rm.onclick=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:m.name,role:null})).then(reloadMembers).catch(e=>err(e.message));
+      tb.append(el('tr',{},el('td',{textContent:m.name}),el('td',{},sel),el('td',{textContent:hwText(m)}),el('td',{},rm)));
+    }
+  };
+  reloadMembers();
+  const nm=el('input',{placeholder:'player name'}),rl=el('select',{},ROLES.slice(1).map(r=>el('option',{value:r,textContent:r}))),add=el('button',{textContent:'Add',className:'go'});
+  add.onclick=()=>api(`/v1/worlds/${w.id}/members`,send('PUT',{name:nm.value,role:rl.value})).then(()=>{nm.value='';reloadMembers();note('Member added.')}).catch(e=>err(e.message==='NO_SUCH_PLAYER_OR_LAST_ADMIN'?'That player has never signed in to this gateway.':e.message));
+  const out=el('code'),inv=el('button',{textContent:'New invite'});
+  inv.onclick=()=>api(`/v1/worlds/${w.id}/invite`,send('POST',{role:rl.value})).then(j=>out.textContent=j.code+'  (single use, role '+rl.value+', '+location.origin+j.link+')').catch(e=>err(e.message));
+  memCard.append(el('div',{className:'row'},nm,rl,add),el('div',{className:'row'},inv,out));
+  box.append(memCard);
+
+  // Saves / Revisions card
+  const revCard=el('div',{className:'card'},
+    el('h2',{textContent:'Saves & Rollback'}),
+    el('p',{textContent:'Every autosave is kept as a step in the history. Restoring adds a new step that matches the old one, so a restore can be undone the same way.'})
+  );
+  const hb=el('tbody');
+  const loadRevs=async()=>{
+    hb.replaceChildren();
+    const {head,revisions}=await api(`/v1/worlds/${w.id}/revisions`).catch(()=>({head:null,revisions:[]}));
+    for(const r of revisions){
+      const go=el('button',{textContent:r.id===head?'Current':'Restore',disabled:r.id===head});
+      go.onclick=()=>{
+        if(!confirm('Restore the world to '+r.id+'? A new save is added on top, nothing is deleted.'))return;
+        api(`/v1/worlds/${w.id}/revert`,send('POST',{rev:r.id})).then(()=>{note('Restored as '+r.id+'.');loadRevs()}).catch(e=>err(e.message==='WORLD_RUNNING'?'The world is being hosted right now. Restore works once everyone has left.':e.message));
+      };
+      hb.append(el('tr',{},el('td',{textContent:'R'+r.seq}),el('td',{textContent:new Date(r.at*1000).toLocaleString()}),el('td',{textContent:r.kind.toLowerCase()+(r.by?' by '+r.by:'')}),el('td',{textContent:r.chunks+' chunks, '+r.files+' files'}),el('td',{},go)));
+    }
+  };
+  loadRevs();
+  revCard.append(el('table',{className:'stack'},hb));
+  box.append(revCard);
+
+  // Mod rules & requests card
+  const modCard=el('div',{className:'card'},
+    el('h2',{textContent:'Mod Rules & Requests'}),
+    el('p',{textContent:'Empty object means no restriction. Otherwise hosts must run exactly these mods: {"allow":[{"id":"create","hash":"sha256 of the jar"}],"ignore":["modid"]}. Ignored ids are not compared.'})
+  );
+  const ta=el('textarea',{spellcheck:false}),saveMods=el('button',{textContent:'Save mod rules',className:'go'});
+  api(`/v1/worlds/${w.id}/mods`).then(j=>ta.value=JSON.stringify(j,null,2)).catch(()=>{});
+  saveMods.onclick=()=>{
+    let d;try{d=JSON.parse(ta.value)}catch{return err('Not valid JSON.')}
+    api(`/v1/worlds/${w.id}/mods`,send('PUT',d)).then(()=>note('Mod rules saved.')).catch(e=>err(e.message));
+  };
+  const rq=el('tbody');
+  const loadReqs=async()=>{
+    rq.replaceChildren();
+    const {requests}=await api(`/v1/worlds/${w.id}/mod-requests`).catch(()=>({requests:[]}));
+    if(!requests.length)rq.append(el('tr',{},el('td',{textContent:'No pending requests.'})));
+    for(const r of requests){
+      const ok=el('button',{textContent:'Allow',className:'go'}),no=el('button',{className:'x',textContent:'Dismiss'});
+      const act=a=>api(`/v1/worlds/${w.id}/mod-requests/resolve`,send('POST',{id:r.id,hash:r.hash,approve:a})).then(()=>{loadReqs();api(`/v1/worlds/${w.id}/mods`).then(j=>ta.value=JSON.stringify(j,null,2));note('Request resolved.')}).catch(e=>err(e.message==='NO_ALLOWLIST'?'This world has no allowlist yet, so there is nothing to extend.':e.message));
+      ok.onclick=()=>act(true);no.onclick=()=>act(false);
+      rq.append(el('tr',{},el('td',{textContent:r.id}),el('td',{textContent:r.hash.slice(0,12)}),el('td',{textContent:r.player+' '+new Date(r.at*1000).toLocaleDateString()}),el('td',{},ok,no)));
+    }
+  };
+  loadReqs();
+  modCard.append(ta,el('div',{className:'row'},saveMods),el('h3',{textContent:'Mod requests'}),el('table',{className:'stack'},rq));
+  box.append(modCard);
+}
+
+function renderAccountTab(){
+  const box=$('#tab-account');
+  box.replaceChildren();
+  const me=state.me;
+
+  const idCard=el('div',{className:'card'},
+    el('h2',{textContent:'Signed-In Identity'}),
+    el('p',{textContent:me.mode==='sso'?`Signed in via SSO as ${me.email}.`:`Signed in via in-game token as ${me.player}. Create or sign in to an SSO account below to stop needing 5-minute login codes.`})
+  );
+  if(me.linked&&me.linked.length){
+    idCard.append(el('h3',{textContent:'Linked Minecraft Accounts'}));
+    const ul=el('ul',{});
+    for(const p of me.linked){
+      ul.append(el('li',{},el('strong',{textContent:p.name}),' ',el('code',{textContent:p.uuid})));
+    }
+    idCard.append(ul);
+  }else{
+    idCard.append(el('p',{textContent:'No Minecraft account linked to this SSO account yet.'}));
+  }
+  box.append(idCard);
+
+  if(me.mode==='sso'){
+    const linkCard=el('div',{className:'card'},
+      el('h2',{textContent:'Link a Minecraft Account to SSO'}),
+      el('p',{textContent:'In game, open Shared Worlds and press Link device (or Web Panel), then paste the 5-minute code here to permanently bind that Minecraft player to your SSO account.'})
+    );
+    const inp=el('input',{placeholder:'one-time code from game'}),btn=el('button',{className:'go',textContent:'Link Minecraft Account'});
+    btn.onclick=async()=>{
+      err();
+      try{
+        const r=await api('/v1/sso/link',send('POST',{code:inp.value}));
+        inp.value='';
+        note('Linked Minecraft account '+(r.player||r.uuid)+'.');
+        await boot();
+      }catch(e){err(e.message==='UNAUTHORIZED'?'Code invalid or expired.':e.message);}
+    };
+    linkCard.append(el('div',{className:'row'},inp,btn));
+    box.append(linkCard);
+  }else{
+    const upCard=el('div',{className:'card'},
+      el('h2',{textContent:'Bind to an SSO Account'}),
+      el('p',{textContent:'Sign in or register an SSO email & password right now; your current in-game session ('+me.player+') will be linked automatically.'})
+    );
+    const em=el('input',{type:'email',placeholder:'you@example.com'}),pw=el('input',{type:'password',placeholder:'password (min 8 chars)'});
+    const bIn=el('button',{className:'go',textContent:'Sign in & Link'}),bReg=el('button',{textContent:'Register & Link'});
+    const run=async path=>{
+      err();
+      try{
+        await api(path,send('POST',{email:em.value.trim(),password:pw.value}));
+        await api('/v1/sso/link',send('POST',{code:''}));
+        note('SSO account linked to '+me.player+'.');
+        await boot();
+      }catch(e){err(e.message);}
+    };
+    bIn.onclick=()=>run('/v1/auth/sso/login');
+    bReg.onclick=()=>run('/v1/auth/sso/register');
+    upCard.append(el('div',{className:'row'},em,pw),el('div',{className:'row'},bIn,bReg));
+    box.append(upCard);
+  }
+
+  // Multi-device key linking via SSO
+  const devCard=el('div',{className:'card'},
+    el('h2',{textContent:'Authorize Another PC / Device'}),
+    el('p',{textContent:'Playing from a second computer? Mint a one-time device link code here, then open Shared Worlds -> Link device on the new machine and paste it.'})
+  );
+  const dOut=el('code'),dBtn=el('button',{className:'go',textContent:'Generate Device Link Code'});
+  dBtn.onclick=async()=>{
+    err();
+    try{
+      const r=await api('/v1/auth/link-code',send('POST',{}));
+      dOut.textContent=r.code+'  (valid for 5 minutes on your other device)';
+    }catch(e){err(e.message==='UNAUTHORIZED'?'Link a Minecraft account first before authorizing devices.':e.message);}
+  };
+  devCard.append(el('div',{className:'row'},dBtn,dOut));
+  box.append(devCard);
+}
+
+function quotaEditorModal(scope,id,label,cur){
+  const box=el('div',{className:'card',style:'border:2px solid var(--acc)'});
+  box.append(el('h3',{textContent:`Edit ${scope.toUpperCase()} Quotas: ${label} (${id})`}),
+    el('p',{textContent:'Leave a field empty for unlimited (or to inherit from the * default). Values in MB are converted to bytes.'})
+  );
+  const toMb=v=>v==null?'':String(Math.round(v/(1024*1024)));
+  const sMb=el('input',{type:'number',placeholder:'Storage MB (empty=unlimited)',value:toMb(cur?.storage_bytes)});
+  const rMb=el('input',{type:'number',placeholder:'Monthly Relay MB',value:toMb(cur?.relay_bytes_month)});
+  const wCnt=el('input',{type:'number',placeholder:'Max Worlds (user)',value:cur?.world_count??''});
+  const kRev=el('input',{type:'number',placeholder:'Keep Revisions (world)',value:cur?.keep_revisions??''});
+  const kDay=el('input',{type:'number',placeholder:'Keep Days (world)',value:cur?.keep_days??''});
+  const mGst=el('input',{type:'number',placeholder:'Max Guests (world)',value:cur?.max_guests??''});
+  const num=(inp,scale=1)=>{const v=inp.value.trim();return v===''?null:Math.max(0,Math.round(Number(v)*scale));};
+  const save=el('button',{className:'go',textContent:'Save Quotas'}),cancel=el('button',{textContent:'Close',onclick:()=>box.remove()});
+  save.onclick=async()=>{
+    err();
+    try{
+      await api('/v1/admin/quotas',send('PUT',{
+        scope,id,
+        storage_bytes:num(sMb,1024*1024),
+        relay_bytes_month:num(rMb,1024*1024),
+        world_count:scope==='user'?num(wCnt):null,
+        keep_revisions:scope==='world'?num(kRev):null,
+        keep_days:scope==='world'?num(kDay):null,
+        max_guests:scope==='world'?num(mGst):null,
+      }));
+      note(`Quotas updated for ${label}.`);
+      box.remove();
+      await refreshAll();
+    }catch(e){err(e.message);}
+  };
+  const fields=scope==='world'
+    ?[el('label',{},'Storage (MB): ',sMb),el('label',{},'Relay/mo (MB): ',rMb),el('label',{},'Keep revisions: ',kRev),el('label',{},'Keep days: ',kDay),el('label',{},'Max guests: ',mGst)]
+    :[el('label',{},'Storage (MB): ',sMb),el('label',{},'Relay/mo (MB): ',rMb),el('label',{},'Max worlds: ',wCnt)];
+  box.append(el('div',{className:'row'},...fields),el('div',{className:'row'},save,cancel));
+  return box;
+}
+
+async function renderAdminTab(){
+  const box=$('#tab-admin');
+  box.replaceChildren();
+  if(!state.me?.superadmin)return;
+  const edSlot=el('div',{});
+  box.append(edSlot);
+
+  const u=state.usage||await api('/v1/admin/usage').catch(()=>null);
+  if(u){
+    state.usage=u;
+    // Worlds usage & quotas
+    const wCard=el('div',{className:'card'});
+    const defWorldBtn=el('button',{textContent:'Default World Quotas (*)'});
+    defWorldBtn.onclick=()=>{edSlot.replaceChildren(quotaEditorModal('world','*','Default World',u.defaults?.world));};
+    wCard.append(el('div',{className:'between'},el('h2',{textContent:`All Worlds & Quotas (${u.month})`}),defWorldBtn));
+    const wr=u.worlds.map(w=>{
+      const qBtn=el('button',{textContent:'Quotas'});
+      qBtn.onclick=()=>edSlot.replaceChildren(quotaEditorModal('world',w.id,w.name,w.limits));
+      const iBtn=el('button',{className:'go',textContent:'Inspect'});
+      iBtn.onclick=()=>{state.selectedWorld=w.id;setTab('world');};
+      return el('tr',{},
+        el('td',{},el('strong',{textContent:w.name}),' ',el('small',{textContent:'('+w.id+')'})),
+        el('td',{textContent:w.owner||'-'}),
+        vs(w.storage_bytes,w.limits.storage_bytes),
+        el('td',{className:'n',textContent:w.revisions}),
+        vs(w.relay_bytes_month,w.limits.relay_bytes_month),
+        el('td',{className:'n',textContent:w.commits}),
+        el('td',{className:'n'},qBtn,' ',iBtn)
+      );
+    });
+    wCard.append(el('table',{},
+      el('thead',{},el('tr',{},el('th',{textContent:'World'}),el('th',{textContent:'Owner'}),el('th',{className:'n',textContent:'Storage'}),el('th',{className:'n',textContent:'Saves'}),el('th',{className:'n',textContent:'Relay this month'}),el('th',{className:'n',textContent:'Commits'}),el('th',{className:'n',textContent:'Actions'}))),
+      el('tbody',{},wr)
+    ));
+    box.append(wCard);
+
+    // Users usage & quotas
+    const uCard=el('div',{className:'card'});
+    const defUserBtn=el('button',{textContent:'Default User Quotas (*)'});
+    defUserBtn.onclick=()=>{edSlot.replaceChildren(quotaEditorModal('user','*','Default User',u.defaults?.user));};
+    uCard.append(el('div',{className:'between'},el('h2',{textContent:'Owners & User Quotas'}),defUserBtn));
+    const ur=u.users.map(usr=>{
+      const qBtn=el('button',{textContent:'Quotas'});
+      qBtn.onclick=()=>edSlot.replaceChildren(quotaEditorModal('user',usr.uuid,usr.name,usr.limits));
+      return el('tr',{},
+        el('td',{},el('strong',{textContent:usr.name}),' ',el('small',{textContent:usr.uuid})),
+        vs(usr.storage_bytes,usr.limits.storage_bytes),
+        el('td',{className:'n',textContent:usr.worlds+(usr.limits.world_count==null?'':' / '+usr.limits.world_count)}),
+        vs(usr.relay_bytes_month,usr.limits.relay_bytes_month),
+        el('td',{className:'n'},qBtn)
+      );
+    });
+    uCard.append(el('table',{},
+      el('thead',{},el('tr',{},el('th',{textContent:'Owner'}),el('th',{className:'n',textContent:'Storage'}),el('th',{className:'n',textContent:'Worlds'}),el('th',{className:'n',textContent:'Relay this month'}),el('th',{className:'n',textContent:'Actions'}))),
+      el('tbody',{},ur)
+    ));
+    box.append(uCard);
+  }
+
+  // User Moderation & Maintenance grid
+  const modGrid=el('div',{className:'grid'});
+  const usrCard=el('div',{className:'card'},el('h2',{textContent:'User Role & Status'}));
+  const uName=el('input',{placeholder:'player name'}),uLook=el('button',{textContent:'Inspect User'}),uInfo=el('div',{});
+  uLook.onclick=async()=>{
+    err();uInfo.replaceChildren();
+    try{
+      const j=await api(`/v1/admin/users/${encodeURIComponent(uName.value.trim())}`);
+      const stSel=el('select',{},['ACTIVE','SUSPENDED','BANNED'].map(s=>el('option',{value:s,textContent:s,selected:s===j.status})));
+      const rsn=el('input',{placeholder:'reason',value:j.reason||''});
+      const stSave=el('button',{className:'go',textContent:'Update Status'});
+      stSave.onclick=()=>api(`/v1/admin/users/${encodeURIComponent(j.name)}/status`,send('PUT',{status:stSel.value,reason:rsn.value})).then(()=>note('Status updated for '+j.name)).catch(e=>err(e.message));
+      const rlSel=el('select',{},['user','admin'].map(r=>el('option',{value:r,textContent:r,selected:r===j.role})));
+      const rlSave=el('button',{textContent:'Set Gateway Role'});
+      rlSave.onclick=()=>api(`/v1/admin/users/${encodeURIComponent(j.name)}/role`,send('PUT',{role:rlSel.value})).then(()=>note('Gateway role updated for '+j.name)).catch(e=>err(e.message));
+      uInfo.append(
+        el('p',{textContent:`${j.name} (${j.uuid})`}),
+        el('div',{className:'row'},stSel,rsn,stSave),
+        el('div',{className:'row'},rlSel,rlSave)
+      );
+    }catch(e){err(e.message);}
+  };
+  usrCard.append(el('div',{className:'row'},uName,uLook),uInfo);
+
+  const mntCard=el('div',{className:'card'},el('h2',{textContent:'Maintenance Mode'}));
+  (async()=>{
+    const m=await api('/v1/admin/maintenance').catch(()=>({on:false}));
+    const chk=el('input',{type:'checkbox',checked:!!m.on});
+    const msg=el('input',{placeholder:'maintenance message',value:m.message||'',style:'flex:1'});
+    const save=el('button',{className:'go',textContent:'Apply'});
+    save.onclick=()=>api('/v1/admin/maintenance',send('PUT',{on:chk.checked,retry_after_s:300,message:msg.value})).then(()=>note('Maintenance mode '+(chk.checked?'enabled':'disabled')+'.')).catch(e=>err(e.message));
+    mntCard.append(el('div',{className:'row'},el('label',{},chk,' Maintenance active'),msg,save));
+  })();
+  modGrid.append(usrCard,mntCard);
+  box.append(modGrid);
+
+  // Gateway Audit Log
+  const audCard=el('div',{className:'card'},el('h2',{textContent:'Gateway Audit Log'}));
+  const atb=el('tbody');
+  audCard.append(el('table',{},el('thead',{},el('tr',{},el('th',{textContent:'Time'}),el('th',{textContent:'Action'}),el('th',{textContent:'Actor'}),el('th',{textContent:'World'}),el('th',{textContent:'Target'}))),atb));
+  api('/v1/admin/audit?limit=25').then(j=>{
+    for(const e of (j.entries||[])){
+      atb.append(el('tr',{},
+        el('td',{textContent:new Date(e.ts*1000).toLocaleString()}),
+        el('td',{textContent:e.action}),
+        el('td',{textContent:e.actor_name||e.actor||'-'}),
+        el('td',{textContent:e.world||'-'}),
+        el('td',{textContent:e.target||'-'})
+      ));
+    }
+  }).catch(()=>{});
+  box.append(audCard);
+}
+
 // the game opens /panel#code=..., so a code that only lives five minutes never has to be typed by hand
 const fromUrl=new URLSearchParams(location.hash.slice(1)).get('code');
 if(fromUrl){
   history.replaceState(null,'',location.pathname);
-  signIn(fromUrl).catch(()=>{err('That sign-in link was already used or has expired. Run /meshpanel in game for a new one.');show()});
+  signIn(fromUrl).catch(()=>{err('That sign-in link was already used or has expired. Run /meshpanel in game for a new one.');boot()});
 }else{
-  show();
+  boot();
 }
 </script>
+</html>
