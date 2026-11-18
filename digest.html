@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCMesh - World Digest &amp; Patch Notes</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --panel: #111827;
+      --panel-border: #1f293d;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --mining: #f97316;
+      --card-bg: #1e293b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #000;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+    .title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      background: #1e293b;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover {
+      background: #334155;
+      border-color: var(--accent);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+    main {
+      flex: 1;
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .banner {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .banner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .greeting {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .time-away-badge {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .metric-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+    }
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .tab-pane.active {
+      display: flex;
+    }
+    .item-card {
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .item-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .item-tag {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #334155;
+      color: #e2e8f0;
+    }
+    .item-body {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    .stat-bar {
+      display: flex;
+      gap: 14px;
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
+    .stat-built { color: var(--success); font-weight: 600; }
+    .stat-mined { color: var(--mining); font-weight: 600; }
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .check-box {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      background: var(--success);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+    .rewards-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .reward-pill {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--warning);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo-badge">MCMESH</div>
+      <div>
+        <div class="title">World Digest &amp; Patch Notes</div>
+        <div class="subtitle" id="digestHeaderSubtitle">Loading world summary...</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="copySummaryText()">Copy Text Summary</button>
+      <a class="btn" id="btnTimelineLink" href="#">View Timeline</a>
+      <a class="btn" id="btnIsomapLink" href="#">View 4K Base</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="banner">
+      <div class="banner-header">
+        <div>
+          <div class="greeting" id="bannerGreeting">Welcome back!</div>
+          <div style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;" id="bannerSub">
+            Here is everything your teammates built, mined, and discovered while you were offline.
+          </div>
+        </div>
+        <div class="time-away-badge" id="badgeAway">Offline 0h</div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-val" id="metricBlocksBuilt">0</div>
+          <div class="metric-label">Blocks Placed</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="metricBlocksMined">0</div>
+          <div class="metric-label">Blocks Mined</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="metricQuestsCompleted">0</div>
+          <div class="metric-label">FTB Quests Cleared</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="metricActiveRegions">0</div>
+          <div class="metric-label">Active Work Regions</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchPane('deltas')">Construction Deltas</button>
+      <button class="tab-btn" onclick="switchPane('quests')">FTB Quests &amp; Rewards</button>
+      <button class="tab-btn" onclick="switchPane('milestones')">Historical Milestones</button>
+    </div>
+
+    <section class="tab-pane active" id="paneDeltas">
+      <div id="deltasList">Loading construction deltas...</div>
+    </section>
+
+    <section class="tab-pane" id="paneQuests">
+      <div id="questsList">Loading quest progression...</div>
+    </section>
+
+    <section class="tab-pane" id="paneMilestones">
+      <div id="milestonesList">Loading milestones...</div>
+    </section>
+  </main>
+
+  <script>
+    const pathParts = window.location.pathname.split('/');
+    const worldId = pathParts[pathParts.length - 1] || 'default';
+    const params = new URLSearchParams(window.location.search);
+    const playerParam = params.get('player') || 'Explorer';
+
+    document.getElementById('digestHeaderSubtitle').textContent = 'World: ' + worldId + ' | Player: ' + playerParam;
+    document.getElementById('btnTimelineLink').href = '/timeline/' + worldId;
+    document.getElementById('btnIsomapLink').href = '/isomap/' + worldId;
+
+    let digestData = null;
+
+    function switchPane(pane) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+      if (pane === 'deltas') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('paneDeltas').classList.add('active');
+      } else if (pane === 'quests') {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('paneQuests').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        document.getElementById('paneMilestones').classList.add('active');
+      }
+    }
+
+    async function loadDigest() {
+      try {
+        const url = `/v1/worlds/${worldId}/digest?player=${encodeURIComponent(playerParam)}`;
+        const res = await fetch(url);
+        digestData = await res.json();
+        renderDigest(digestData);
+      } catch (err) {
+        console.error('Failed to load digest:', err);
+      }
+    }
+
+    function renderDigest(data) {
+      const hoursAway = Math.round(data.time_away_seconds / 3600);
+      document.getElementById('badgeAway').textContent = `Offline ${hoursAway} hours`;
+      document.getElementById('bannerGreeting').textContent = `Welcome back, ${data.player_name}!`;
+
+      let totalAdded = 0;
+      let totalMined = 0;
+      if (data.regional_deltas) {
+        for (const d of data.regional_deltas) {
+          totalAdded += d.blocks_added;
+          totalMined += d.blocks_removed;
+        }
+      }
+      document.getElementById('metricBlocksBuilt').textContent = '+' + totalAdded.toLocaleString();
+      document.getElementById('metricBlocksMined').textContent = '-' + totalMined.toLocaleString();
+
+      let questCount = 0;
+      if (data.quest_progress) {
+        for (const q of data.quest_progress) {
+          questCount += q.completed_quests.length;
+        }
+      }
+      document.getElementById('metricQuestsCompleted').textContent = questCount;
+      document.getElementById('metricActiveRegions').textContent = data.regional_deltas ? data.regional_deltas.length : 0;
+
+      // Render Deltas
+      const deltasContainer = document.getElementById('deltasList');
+      if (data.regional_deltas && data.regional_deltas.length > 0) {
+        deltasContainer.innerHTML = data.regional_deltas.map(d => `
+          <div class="item-card">
+            <div class="item-header">
+              <span class="item-title">${escapeHtml(d.region_name)}</span>
+              <span class="item-tag">By ${escapeHtml(d.player_name)}</span>
+            </div>
+            <div class="item-body">${escapeHtml(d.summary)}</div>
+            <div class="stat-bar">
+              <span class="stat-built">+${d.blocks_added.toLocaleString()} placed</span>
+              <span class="stat-mined">-${d.blocks_removed.toLocaleString()} excavated</span>
+              <span style="color:var(--text-muted);">Coordinates: chunk (${d.cx}, ${d.cz})</span>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        deltasContainer.innerHTML = '<div style="color:var(--text-muted); padding:12px;">No regional changes recorded.</div>';
+      }
+
+      // Render Quests
+      const questsContainer = document.getElementById('questsList');
+      if (data.quest_progress && data.quest_progress.length > 0) {
+        questsContainer.innerHTML = data.quest_progress.map(q => `
+          <div class="item-card">
+            <div class="item-header">
+              <span class="item-title">${escapeHtml(q.chapter_title)}</span>
+              <span class="item-tag">Team: ${escapeHtml(q.team_name)}</span>
+            </div>
+            <div style="font-size:0.84rem; font-weight:600; color:var(--text); margin-top:4px;">Completed Quests:</div>
+            <div class="checklist">
+              ${q.completed_quests.map(quest => `
+                <div class="check-item">
+                  <div class="check-box">&#10003;</div>
+                  <span>${escapeHtml(quest)}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="font-size:0.84rem; font-weight:600; color:var(--text); margin-top:8px;">Unlocked Rewards:</div>
+            <div class="rewards-list">
+              ${q.unlocked_rewards.map(r => `<span class="reward-pill">${escapeHtml(r)}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        questsContainer.innerHTML = '<div style="color:var(--text-muted); padding:12px;">No quest completions during this window.</div>';
+      }
+
+      // Render Milestones
+      const milestonesContainer = document.getElementById('milestonesList');
+      if (data.milestones && data.milestones.length > 0) {
+        milestonesContainer.innerHTML = data.milestones.map(m => {
+          const d = new Date(m.date_sec * 1000);
+          const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="item-card">
+              <div class="item-header">
+                <span class="item-title">${escapeHtml(m.title)}</span>
+                <span class="item-tag">[${escapeHtml(m.icon)}]</span>
+              </div>
+              <div class="item-body">Achieved by <strong style="color:var(--text);">${escapeHtml(m.achieved_by)}</strong> on ${dateStr}</div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        milestonesContainer.innerHTML = '<div style="color:var(--text-muted); padding:12px;">No milestones achieved during this interval.</div>';
+      }
+    }
+
+    function copySummaryText() {
+      if (!digestData) return;
+      const hoursAway = Math.round(digestData.time_away_seconds / 3600);
+      let text = `MCMesh World Digest: ${digestData.world_id}\n`;
+      text += `Since You Last Played (~${hoursAway} hours ago):\n\n`;
+
+      text += `* Regional Construction Deltas:\n`;
+      if (digestData.regional_deltas) {
+        for (const d of digestData.regional_deltas) {
+          text += `  - ${d.region_name} (+${d.blocks_added} / -${d.blocks_removed} by ${d.player_name}): ${d.summary}\n`;
+        }
+      }
+
+      text += `\n* FTB Quest Progression:\n`;
+      if (digestData.quest_progress) {
+        for (const q of digestData.quest_progress) {
+          text += `  - ${q.chapter_title}: ${q.completed_quests.join(', ')} (Rewards: ${q.unlocked_rewards.join(', ')})\n`;
+        }
+      }
+
+      text += `\n* Historical Milestones:\n`;
+      if (digestData.milestones) {
+        for (const m of digestData.milestones) {
+          text += `  - [${m.icon}] ${m.title} (by ${m.achieved_by})\n`;
+        }
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('World Digest summary copied to clipboard!');
+      }).catch(() => {
+        prompt('Copy World Digest summary:', text);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    loadDigest();
+  </script>
+</body>
+</html>
