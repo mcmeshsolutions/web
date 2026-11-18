@@ -15,9 +15,10 @@ code{font-family:ui-monospace,monospace;background:var(--line);padding:.05rem .3
 <p>Worlds with no dedicated server. Whoever is online and has the strongest machine hosts the world, and the host changes without kicking anyone. The world is stored here, so it is always safe and always current.</p>
 <h2>Join a world</h2>
 <ol>
-<li>Install the <b>Create Full Stack</b> modpack (NeoForge 1.21.1) and make sure the <b>mcmesh</b> mod is in it. Both the modpack and the mod are in <a href="/get">the pack download</a>.</li>
+<li>Install the modpack with the <b>mcmesh</b> mod included. Both the modpack and the mod are in <a href="/get">the pack download</a>.</li>
 <li>Start the game. Pirated or premium accounts both work, Microsoft accounts sign in automatically.</li>
-<li>In the multiplayer menu add the server <code>play.23012006.xyz</code>, or open <b>Shared Worlds</b> from the title screen.</li>
+<li>In the multiplayer menu add this server address (<code id="server-addr">play.example.com</code>), or open <b>Shared Worlds</b> from the title screen.</li>
+<script>if (window.location.host) document.getElementById('server-addr').textContent = window.location.host;</script>
 <li>Got an invite code from a friend? Press <b>Redeem</b> in Shared Worlds, paste it, then join the world from the list.</li>
 </ol>
 <h2>Host a world</h2>
