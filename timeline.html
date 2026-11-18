@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCMesh - World Timeline &amp; Activity Heatmap</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --panel: #111827;
+      --panel-border: #1f293d;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --mining: #f97316;
+      --building: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #000;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+    .title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .filter-btn {
+      background: #1e293b;
+      border: 1px solid var(--panel-border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-btn:hover {
+      background: #334155;
+      color: var(--text);
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+    .map-container {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at center, #131b2e 0%, #090d16 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+    .map-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      pointer-events: none;
+      min-width: 200px;
+    }
+    .map-legend {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    .sidebar {
+      width: 380px;
+      background: var(--panel);
+      border-left: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      z-index: 5;
+    }
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--panel-border);
+      background: #0f172a;
+    }
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      padding: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .milestone-card {
+      background: #1e293b;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .milestone-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .milestone-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .milestone-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .leader-card {
+      background: #1e293b;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .leader-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--panel-border);
+      color: var(--accent);
+    }
+    .leader-card:nth-child(1) .leader-rank {
+      background: #fbbf24;
+      color: #000;
+      border-color: #fbbf24;
+    }
+    .leader-card:nth-child(2) .leader-rank {
+      background: #94a3b8;
+      color: #000;
+      border-color: #94a3b8;
+    }
+    .leader-card:nth-child(3) .leader-rank {
+      background: #b45309;
+      color: #fff;
+      border-color: #b45309;
+    }
+    .leader-avatar {
+      width: 40px;
+      height: 40px;
+      background: #0f172a;
+      border-radius: 6px;
+      border: 1px solid var(--panel-border);
+    }
+    .leader-info {
+      flex: 1;
+    }
+    .leader-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .leader-stats {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .leader-badges {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .badge-tag {
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: #334155;
+      color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo-badge">MCMESH</div>
+      <div>
+        <div class="title">World Timeline &amp; Activity Heatmap</div>
+        <div class="subtitle" id="worldSub">Loading world state...</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="filter-btn active" id="btnFilterAll" onclick="setFilter('all')">All Activity</button>
+      <button class="filter-btn" id="btnFilterBuild" onclick="setFilter('build')">Building Only</button>
+      <button class="filter-btn" id="btnFilterMine" onclick="setFilter('mine')">Mining Only</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="map-container">
+      <canvas id="heatmapCanvas" width="600" height="600"></canvas>
+      <div class="map-legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: #10b981;"></div>
+          <span>Building Intensity</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #f97316;"></div>
+          <span>Mining Intensity</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #38bdf8;"></div>
+          <span>Balanced Activity</span>
+        </div>
+      </div>
+      <div class="map-overlay" id="hoverInfo">
+        <div>Hover over chunk to view coordinates and activity</div>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabMilestonesBtn" onclick="switchTab('milestones')">Milestones</button>
+        <button class="tab-btn" id="tabHofBtn" onclick="switchTab('hof')">Hall of Fame</button>
+      </div>
+
+      <div class="tab-content active" id="tabMilestones">
+        <div id="milestonesList">Loading milestones...</div>
+      </div>
+
+      <div class="tab-content" id="tabHof">
+        <div id="hofList">Loading leaderboards...</div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const pathParts = window.location.pathname.split('/');
+    const worldId = pathParts[pathParts.length - 1] || 'default';
+    document.getElementById('worldSub').textContent = 'World: ' + worldId;
+
+    let heatmapData = null;
+    let activeFilter = 'all';
+    const canvas = document.getElementById('heatmapCanvas');
+    const ctx = canvas.getContext('2d');
+    const hoverInfo = document.getElementById('hoverInfo');
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      if (tab === 'milestones') {
+        document.getElementById('tabMilestonesBtn').classList.add('active');
+        document.getElementById('tabMilestones').classList.add('active');
+      } else {
+        document.getElementById('tabHofBtn').classList.add('active');
+        document.getElementById('tabHof').classList.add('active');
+      }
+    }
+
+    function setFilter(filter) {
+      activeFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (filter === 'all') document.getElementById('btnFilterAll').classList.add('active');
+      if (filter === 'build') document.getElementById('btnFilterBuild').classList.add('active');
+      if (filter === 'mine') document.getElementById('btnFilterMine').classList.add('active');
+      renderHeatmap();
+    }
+
+    async function loadData() {
+      try {
+        const [hmRes, hofRes] = await Promise.all([
+          fetch(`/v1/worlds/${worldId}/heatmap?radius=8`),
+          fetch(`/v1/worlds/${worldId}/hall-of-fame`)
+        ]);
+
+        heatmapData = await hmRes.json();
+        const hofData = await hofRes.json();
+
+        renderHeatmap();
+        renderHof(hofData);
+      } catch (err) {
+        console.error('Failed to load timeline data:', err);
+      }
+    }
+
+    function renderHeatmap() {
+      if (!heatmapData || !heatmapData.points) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const bounds = heatmapData.bounds;
+      const spanX = bounds.max_x - bounds.min_x;
+      const spanZ = bounds.max_z - bounds.min_z;
+      const pad = 40;
+      const w = canvas.width - pad * 2;
+      const h = canvas.height - pad * 2;
+
+      // Draw grid lines
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 8; i++) {
+        const x = pad + (w / 8) * i;
+        ctx.beginPath();
+        ctx.moveTo(x, pad);
+        ctx.lineTo(x, pad + h);
+        ctx.stroke();
+
+        const y = pad + (h / 8) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(pad + w, y);
+        ctx.stroke();
+      }
+
+      // Draw activity points
+      for (const pt of heatmapData.points) {
+        const normX = (pt.x - bounds.min_x) / spanX;
+        const normZ = (pt.z - bounds.min_z) / spanZ;
+        const px = pad + normX * w;
+        const py = pad + normZ * h;
+
+        let intensity = 0;
+        let r = 0, g = 0, b = 0;
+
+        if (activeFilter === 'build') {
+          intensity = pt.build_intensity / (heatmapData.max_intensity || 1);
+          r = 16; g = 185; b = 129;
+        } else if (activeFilter === 'mine') {
+          intensity = pt.mine_intensity / (heatmapData.max_intensity || 1);
+          r = 249; g = 115; b = 22;
+        } else {
+          intensity = pt.total / (heatmapData.max_intensity || 1);
+          const ratio = (pt.build_intensity + 1) / (pt.total + 2);
+          r = Math.floor(249 * (1 - ratio) + 16 * ratio);
+          g = Math.floor(115 * (1 - ratio) + 185 * ratio);
+          b = Math.floor(22 * (1 - ratio) + 129 * ratio);
+        }
+
+        const radius = Math.max(4, intensity * 24);
+        const alpha = Math.min(0.85, Math.max(0.2, intensity * 1.2));
+
+        const grad = ctx.createRadialGradient(px, py, 1, px, py, radius);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Origin center marker
+      const cx = pad + ((0 - bounds.min_x) / spanX) * w;
+      const cy = pad + ((0 - bounds.min_z) / spanZ) * h;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!heatmapData || !heatmapData.points) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      const bounds = heatmapData.bounds;
+      const spanX = bounds.max_x - bounds.min_x;
+      const spanZ = bounds.max_z - bounds.min_z;
+      const pad = 40;
+      const w = canvas.width - pad * 2;
+      const h = canvas.height - pad * 2;
+
+      let closest = null;
+      let minDst = 20;
+
+      for (const pt of heatmapData.points) {
+        const px = pad + ((pt.x - bounds.min_x) / spanX) * w;
+        const py = pad + ((pt.z - bounds.min_z) / spanZ) * h;
+        const dst = Math.hypot(mx - px, my - py);
+        if (dst < minDst) {
+          minDst = dst;
+          closest = pt;
+        }
+      }
+
+      if (closest) {
+        hoverInfo.innerHTML = `
+          <div style="font-weight:700; color:#38bdf8; margin-bottom:4px;">Chunk Coordinates: (${closest.x}, ${closest.z})</div>
+          <div>Building: <span style="color:#10b981; font-weight:600;">${closest.build_intensity}</span> ops</div>
+          <div>Mining: <span style="color:#f97316; font-weight:600;">${closest.mine_intensity}</span> ops</div>
+          <div style="margin-top:2px;">Total Activity: <span style="font-weight:700;">${closest.total}</span></div>
+        `;
+      } else {
+        hoverInfo.innerHTML = '<div>Hover over chunk to view coordinates and activity</div>';
+      }
+    });
+
+    function renderHof(data) {
+      const msList = document.getElementById('milestonesList');
+      if (data.milestones && data.milestones.length > 0) {
+        msList.innerHTML = data.milestones.map(m => {
+          const d = new Date(m.date_sec * 1000);
+          const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="milestone-card">
+              <span class="milestone-badge">${escapeHtml(m.icon)}</span>
+              <div class="milestone-title">${escapeHtml(m.title)}</div>
+              <div class="milestone-meta">
+                <span>By ${escapeHtml(m.by)}</span>
+                <span>${escapeHtml(m.rev)}</span>
+              </div>
+              <div style="font-size:0.74rem; color:#64748b; margin-top:4px;">${dateStr}</div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        msList.innerHTML = '<div style="color:var(--text-muted); padding:10px;">No milestones recorded yet.</div>';
+      }
+
+      const hofList = document.getElementById('hofList');
+      if (data.leaders && data.leaders.length > 0) {
+        hofList.innerHTML = data.leaders.map(l => {
+          const hours = (l.playtime_seconds / 3600).toFixed(1);
+          return `
+            <div class="leader-card">
+              <div class="leader-rank">#${l.rank}</div>
+              <div class="leader-avatar"></div>
+              <div class="leader-info">
+                <div class="leader-name">${escapeHtml(l.player_name)}</div>
+                <div class="leader-stats">
+                  Placed: ${l.blocks_placed.toLocaleString()} | Mined: ${l.blocks_mined.toLocaleString()}
+                </div>
+                <div class="leader-stats">Playtime: ${hours}h</div>
+                <div class="leader-badges">
+                  ${l.badges.map(b => `<span class="badge-tag">${escapeHtml(b)}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        hofList.innerHTML = '<div style="color:var(--text-muted); padding:10px;">No leaderboards available.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
