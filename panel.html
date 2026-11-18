@@ -769,11 +769,20 @@ function skinStudioCard(){
   const statusLine=el('p',{style:'font-size:0.85rem;color:#8b949e;margin:0;'});
   const currentLink=el('div',{style:'margin-top:0.25rem;'});
 
+  const capeFileInp=el('input',{type:'file',accept:'image/png'});
+  const capeSaveBtn=el('button',{className:'go',textContent:'Save & Apply Cape',disabled:true});
+  const capeStatusLine=el('p',{style:'font-size:0.85rem;color:#8b949e;margin:0;'});
+  const capeLink=el('div',{style:'margin-top:0.25rem;'});
+
   controls.append(
-    el('label',{},el('strong',{textContent:'Upload PNG (64x64): '}),fileInp),
-    el('label',{},el('strong',{textContent:'Or import from URL: '}),urlRow),
+    el('label',{},el('strong',{textContent:'Upload Skin PNG (64x64): '}),fileInp),
+    el('label',{},el('strong',{textContent:'Or Skin from URL: '}),urlRow),
     el('div',{className:'row'},saveBtn),
-    statusLine,currentLink
+    statusLine,currentLink,
+    el('hr',{style:'border-color:#30363d;margin:0.75rem 0;'}),
+    el('label',{},el('strong',{textContent:'Upload Custom Cape PNG (64x32): '}),capeFileInp),
+    el('div',{className:'row'},capeSaveBtn),
+    capeStatusLine,capeLink
   );
   container.append(canvasWrap,controls);
   card.append(container);
@@ -821,6 +830,31 @@ function skinStudioCard(){
       err('Skin upload failed: '+(e.message||e));
     }
   };
+
+  let currentCapeBytes=null;
+  capeFileInp.onchange=()=>{
+    const f=capeFileInp.files[0];
+    if(!f)return;
+    currentCapeBytes=f;
+    capeSaveBtn.disabled=false;
+    capeStatusLine.textContent=`Selected cape file: ${f.name} (${Math.round(f.size/1024)} KB)`;
+  };
+  capeSaveBtn.onclick=async()=>{
+    if(!currentCapeBytes)return;
+    capeSaveBtn.disabled=true;
+    capeStatusLine.textContent='Uploading cape to gateway...';
+    try{
+      const r=await api('/v1/capes',{method:'POST',raw:true,headers:{'content-type':'image/png'},body:currentCapeBytes});
+      capeStatusLine.textContent=`Cape saved! SHA-256: ${r.hash.substring(0,16)}...`;
+      capeLink.replaceChildren(el('a',{href:r.url,target:'_blank',textContent:'View raw PNG cape: '+r.url}));
+      note('Custom cape updated successfully.');
+    }catch(e){
+      capeSaveBtn.disabled=false;
+      capeStatusLine.textContent='Upload failed: '+(e.message||e);
+      err('Cape upload failed: '+(e.message||e));
+    }
+  };
+
   (async()=>{
     try{
       if(state.me&&state.me.linked&&state.me.linked.length){
@@ -831,6 +865,10 @@ function skinStudioCard(){
           img.crossOrigin='anonymous';
           img.onload=()=>{preview.setTexture(img);currentLink.replaceChildren(el('a',{href:s.skin_url,target:'_blank',textContent:'Current active skin: '+s.skin_url}));};
           img.src=s.skin_url;
+        }
+        const c=await api('/v1/users/'+uuid+'/cape').catch(()=>null);
+        if(c&&c.cape_url){
+          capeLink.replaceChildren(el('a',{href:c.cape_url,target:'_blank',textContent:'Current active cape: '+c.cape_url}));
         }
       }
     }catch(e){}
