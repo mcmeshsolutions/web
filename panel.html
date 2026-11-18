@@ -675,6 +675,167 @@ function renderAccountTab(){
   };
   devCard.append(el('div',{className:'row'},dBtn,dOut));
   box.append(devCard);
+
+  box.append(skinStudioCard());
+}
+
+function initSkinPreview(canvas){
+  const gl=canvas.getContext('webgl')||canvas.getContext('experimental-webgl');
+  if(!gl)return{setTexture:()=>{},destroy:()=>{}};
+  const vsSrc=`attribute vec3 a_pos;attribute vec2 a_uv;attribute vec3 a_norm;uniform mat4 u_mvp;varying vec2 v_uv;varying float v_light;void main(){gl_Position=u_mvp*vec4(a_pos,1.0);v_uv=a_uv;v_light=max(0.4,dot(a_norm,normalize(vec3(0.5,0.8,0.6))));}`;
+  const fsSrc=`precision mediump float;varying vec2 v_uv;varying float v_light;uniform sampler2D u_tex;void main(){vec4 c=texture2D(u_tex,v_uv);if(c.a<0.1)discard;gl_FragColor=vec4(c.rgb*v_light,c.a);}`;
+  function cSh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+  const prog=gl.createProgram();
+  gl.attachShader(prog,cSh(gl.VERTEX_SHADER,vsSrc));
+  gl.attachShader(prog,cSh(gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(prog);gl.useProgram(prog);
+  const a_pos=gl.getAttribLocation(prog,'a_pos'),a_uv=gl.getAttribLocation(prog,'a_uv'),a_norm=gl.getAttribLocation(prog,'a_norm');
+  const u_mvp=gl.getUniformLocation(prog,'u_mvp');
+  const verts=[];
+  function box(x0,y0,z0,x1,y1,z1,u0,v0,sw,sh){
+    const su=1/sw,sv=1/sh;
+    function quad(p1,p2,p3,p4,n,tx0,ty0,tx1,ty1){
+      const uv=[tx0*su,ty0*sv,tx1*su,ty0*sv,tx1*su,ty1*sv,tx0*su,ty0*sv,tx1*su,ty1*sv,tx0*su,ty1*sv];
+      const pos=[p1,p2,p3,p1,p3,p4];
+      for(let i=0;i<6;i++)verts.push(pos[i][0],pos[i][1],pos[i][2],uv[i*2],uv[i*2+1],n[0],n[1],n[2]);
+    }
+    const dx=x1-x0,dy=y1-y0,dz=z1-z0;
+    quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1],[0,0,1],u0+dz,v0+dz,u0+dz+dx,v0+dz+dy);
+    quad([x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0],[0,0,-1],u0+dz*2+dx,v0+dz,u0+dz*2+dx*2,v0+dz+dy);
+    quad([x0,y1,z1],[x1,y1,z1],[x1,y1,z0],[x0,y1,z0],[0,1,0],u0+dz,v0,u0+dz+dx,v0+dz);
+    quad([x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1],[0,-1,0],u0+dz+dx,v0,u0+dz+dx*2,v0+dz);
+    quad([x1,y0,z1],[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[1,0,0],u0+dz+dx,v0+dz,u0+dz*2+dx,v0+dz+dy);
+    quad([x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0],[-1,0,0],u0,v0+dz,u0+dz,v0+dz+dy);
+  }
+  box(-4,14,-4,4,22,4,0,0,64,64);
+  box(-4,2,-2,4,14,2,16,16,64,64);
+  box(-8,2,-2,-4,14,2,40,16,64,64);
+  box(4,2,-2,8,14,2,32,48,64,64);
+  box(-4,-10,-2,0,2,2,0,16,64,64);
+  box(0,-10,-2,4,2,2,16,48,64,64);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);
+  const stride=8*4;
+  gl.vertexAttribPointer(a_pos,3,gl.FLOAT,false,stride,0);gl.enableVertexAttribArray(a_pos);
+  gl.vertexAttribPointer(a_uv,2,gl.FLOAT,false,stride,3*4);gl.enableVertexAttribArray(a_uv);
+  gl.vertexAttribPointer(a_norm,3,gl.FLOAT,false,stride,5*4);gl.enableVertexAttribArray(a_norm);
+  const tex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([220,220,220,255]));
+  gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
+  let yaw=0.4,pitch=0.1,auto=true;
+  function render(){
+    gl.viewport(0,0,canvas.width,canvas.height);
+    gl.clearColor(0.05,0.07,0.1,1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    if(auto)yaw+=0.015;
+    const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const sc=0.045,ar=canvas.width/canvas.height;
+    const mvp=[sc*cy/ar,sc*sy*sp,sc*sy*cp,0,0,sc*cp,-sc*sp,0,-sc*sy/ar,sc*cy*sp,sc*cy*cp,0,0,-0.25,0,1];
+    gl.uniformMatrix4fv(u_mvp,false,new Float32Array(mvp));
+    gl.drawArrays(gl.TRIANGLES,0,verts.length/8);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+  let drag=false,lx=0,ly=0;
+  canvas.onmousedown=e=>{drag=true;lx=e.clientX;ly=e.clientY;auto=false;};
+  window.addEventListener('mouseup',()=>drag=false);
+  window.addEventListener('mousemove',e=>{if(!drag)return;yaw+=(e.clientX-lx)*0.015;pitch=Math.max(-0.8,Math.min(0.8,pitch+(e.clientY-ly)*0.015));lx=e.clientX;ly=e.clientY;});
+  return{setTexture:img=>{gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);}};
+}
+
+function skinStudioCard(){
+  const card=el('div',{className:'card'},
+    el('h2',{textContent:'Custom Skin Studio'}),
+    el('p',{textContent:'Upload a 64x64 or 64x32 Minecraft skin PNG or import from URL. Preview your skin in 3D WebGL below and save it to your account.'})
+  );
+  const container=el('div',{style:'display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start;'});
+  const canvasWrap=el('div',{style:'background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:0.5rem;text-align:center;'});
+  const canvas=el('canvas',{width:200,height:260,style:'display:block;cursor:grab;border-radius:4px;'});
+  const hint=el('small',{style:'color:#8b949e;display:block;margin-top:0.25rem;',textContent:'Drag to rotate 3D preview'});
+  canvasWrap.append(canvas,hint);
+
+  const controls=el('div',{style:'flex:1;min-width:18rem;display:flex;flex-direction:column;gap:0.75rem;'});
+  const fileInp=el('input',{type:'file',accept:'image/png'});
+  const urlInp=el('input',{placeholder:'https://example.com/skin.png',style:'flex:1;'});
+  const loadUrlBtn=el('button',{textContent:'Fetch URL'});
+  const urlRow=el('div',{className:'row'},urlInp,loadUrlBtn);
+  const saveBtn=el('button',{className:'go',textContent:'Save & Apply Skin',disabled:true});
+  const statusLine=el('p',{style:'font-size:0.85rem;color:#8b949e;margin:0;'});
+  const currentLink=el('div',{style:'margin-top:0.25rem;'});
+
+  controls.append(
+    el('label',{},el('strong',{textContent:'Upload PNG (64x64): '}),fileInp),
+    el('label',{},el('strong',{textContent:'Or import from URL: '}),urlRow),
+    el('div',{className:'row'},saveBtn),
+    statusLine,currentLink
+  );
+  container.append(canvasWrap,controls);
+  card.append(container);
+
+  const preview=initSkinPreview(canvas);
+  let currentBytes=null;
+  function loadImg(img,blob){
+    currentBytes=blob;
+    preview.setTexture(img);
+    saveBtn.disabled=false;
+    statusLine.textContent=`Loaded skin image: ${img.width}x${img.height}px`;
+  }
+  fileInp.onchange=()=>{
+    const f=fileInp.files[0];
+    if(!f)return;
+    const r=new FileReader();
+    r.onload=e=>{const img=new Image();img.onload=()=>loadImg(img,f);img.src=e.target.result;};
+    r.readAsDataURL(f);
+  };
+  loadUrlBtn.onclick=async()=>{
+    const u=urlInp.value.trim();
+    if(!u)return;
+    statusLine.textContent='Fetching image...';
+    try{
+      const res=await fetch(u);
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const blob=await res.blob();
+      const r=new FileReader();
+      r.onload=e=>{const img=new Image();img.onload=()=>loadImg(img,blob);img.src=e.target.result;};
+      r.readAsDataURL(blob);
+    }catch(e){statusLine.textContent='Failed to fetch image: '+e.message;}
+  };
+  saveBtn.onclick=async()=>{
+    if(!currentBytes)return;
+    saveBtn.disabled=true;
+    statusLine.textContent='Uploading skin to gateway...';
+    try{
+      const r=await api('/v1/skins',{method:'POST',raw:true,headers:{'content-type':'image/png'},body:currentBytes});
+      statusLine.textContent=`Skin saved! SHA-256: ${r.hash.substring(0,16)}...`;
+      currentLink.replaceChildren(el('a',{href:r.url,target:'_blank',textContent:'View raw PNG skin: '+r.url}));
+      note('Custom skin updated successfully.');
+    }catch(e){
+      saveBtn.disabled=false;
+      statusLine.textContent='Upload failed: '+(e.message||e);
+      err('Skin upload failed: '+(e.message||e));
+    }
+  };
+  (async()=>{
+    try{
+      if(state.me&&state.me.linked&&state.me.linked.length){
+        const uuid=state.me.linked[0].uuid;
+        const s=await api('/v1/users/'+uuid+'/skin').catch(()=>null);
+        if(s&&s.skin_url){
+          const img=new Image();
+          img.crossOrigin='anonymous';
+          img.onload=()=>{preview.setTexture(img);currentLink.replaceChildren(el('a',{href:s.skin_url,target:'_blank',textContent:'Current active skin: '+s.skin_url}));};
+          img.src=s.skin_url;
+        }
+      }
+    }catch(e){}
+  })();
+  return card;
 }
 
 function quotaEditorModal(scope,id,label,cur){
