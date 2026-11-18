@@ -3,39 +3,414 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>mcmesh 3D Voxel Viewer</title>
+  <title>mcmesh 4D Voxel Time-Lapse Scrubber</title>
   <style>
-    body { margin: 0; padding: 0; background: #0c1015; color: #c9d1d9; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
-    #header { position: absolute; top: 1rem; left: 1rem; z-index: 10; background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(8px); padding: 0.75rem 1.25rem; border-radius: 8px; border: 1px solid #30363d; }
-    h1 { margin: 0; font-size: 1.1rem; color: #58a6ff; }
-    p { margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #8b949e; }
-    #canvas { width: 100vw; height: 100vh; display: block; }
-    #controls { position: absolute; bottom: 1rem; right: 1rem; z-index: 10; background: rgba(22, 27, 34, 0.85); padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem; border: 1px solid #30363d; }
+    :root {
+      --bg: #0c1015;
+      --card-bg: rgba(22, 27, 34, 0.85);
+      --border: #30363d;
+      --text: #c9d1d9;
+      --acc: #58a6ff;
+      --green: #3fb950;
+      --purple: #bc8cff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+    #canvas { width: 100vw; height: 100vh; display: block; cursor: grab; }
+    #canvas:active { cursor: grabbing; }
+
+    /* Top Header */
+    #header {
+      position: absolute; top: 1rem; left: 1rem; z-index: 10;
+      background: var(--card-bg); backdrop-filter: blur(10px);
+      padding: 0.75rem 1.25rem; border-radius: 8px; border: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: auto;
+    }
+    h1 { margin: 0; font-size: 1.15rem; color: var(--acc); display: flex; align-items: center; gap: 0.5rem; }
+    .badge { font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: rgba(88, 166, 255, 0.2); color: var(--acc); border: 1px solid var(--acc); }
+    #meta { margin: 0.35rem 0 0 0; font-size: 0.85rem; color: #8b949e; line-height: 1.4; }
+    #stats { margin-top: 0.25rem; font-size: 0.8rem; color: #7ee787; font-family: ui-monospace, monospace; }
+
+    /* Bottom Scrubber Deck */
+    #deck {
+      position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      width: min(90vw, 840px); z-index: 10; background: var(--card-bg);
+      backdrop-filter: blur(12px); padding: 0.85rem 1.25rem; border-radius: 12px;
+      border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column; gap: 0.65rem; pointer-events: auto;
+    }
+    .deck-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .deck-controls { display: flex; align-items: center; gap: 0.5rem; }
+    button.btn {
+      background: #21262d; border: 1px solid var(--border); color: #c9d1d9;
+      padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; transition: 0.15s ease;
+    }
+    button.btn:hover { background: #30363d; border-color: #8b949e; }
+    button.btn.on { background: var(--acc); color: #040d21; border-color: var(--acc); font-weight: 600; }
+    .play-btn { min-width: 4rem; font-weight: bold; }
+    
+    /* Scrubber Track */
+    .slider-wrap { position: relative; width: 100%; display: flex; align-items: center; }
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; background: transparent; height: 1.5rem; cursor: pointer; margin: 0;
+    }
+    input[type=range]:focus { outline: none; }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 8px; background: #21262d; border-radius: 4px; border: 1px solid var(--border);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+      background: var(--acc); cursor: grab; margin-top: -7px;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.5); border: 2px solid #ffffff;
+    }
+    input[type=range]:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.15); }
+
+    /* Floating Camera Controls */
+    #hud-info {
+      position: absolute; top: 1rem; right: 1rem; z-index: 10;
+      background: var(--card-bg); backdrop-filter: blur(8px);
+      padding: 0.5rem 0.85rem; border-radius: 6px; font-size: 0.8rem;
+      border: 1px solid var(--border); color: #8b949e;
+    }
+    #tooltip {
+      position: absolute; pointer-events: none; background: rgba(0,0,0,0.85);
+      border: 1px solid var(--border); color: #fff; padding: 0.35rem 0.65rem;
+      border-radius: 6px; font-size: 0.75rem; z-index: 20; display: none; transform: translate(-50%, -120%);
+    }
   </style>
 </head>
 <body>
   <div id="header">
-    <h1 id="title">mcmesh 3D Base Viewer</h1>
-    <p id="sub">Interactive WebGL Voxel Inspection</p>
+    <h1 id="title">mcmesh 4D Voxel Viewer <span class="badge" id="rev-badge">HEAD</span></h1>
+    <div id="meta">Scrubbing historical revisions • 60 FPS playback</div>
+    <div id="stats">Loading timeline...</div>
   </div>
+
+  <div id="hud-info">
+    Left-drag: Orbit • Right-drag: Pan • Wheel: Zoom • [Space]: Play/Pause
+  </div>
+
+  <div id="tooltip"></div>
+
   <canvas id="canvas"></canvas>
-  <div id="controls">Drag to rotate • Scroll to zoom • Right-drag to pan</div>
+
+  <div id="deck">
+    <div class="deck-top">
+      <div class="deck-controls">
+        <button class="btn" id="btn-first" title="First Revision">|&#9664;</button>
+        <button class="btn" id="btn-prev" title="Step Back">&#9664;</button>
+        <button class="btn on play-btn" id="btn-play">&#9654; Play</button>
+        <button class="btn" id="btn-next" title="Step Forward">&#9654;|</button>
+        <button class="btn" id="btn-last" title="Latest Revision">&#9654;&#9654;|</button>
+      </div>
+
+      <div style="font-size:0.85rem;color:#8b949e;font-family:ui-monospace, monospace;" id="rev-counter">
+        Rev 0 / 0
+      </div>
+
+      <div class="deck-controls">
+        <button class="btn" data-spd="0.5">0.5x</button>
+        <button class="btn on" data-spd="1.0">1x</button>
+        <button class="btn" data-spd="2.0">2x</button>
+        <button class="btn" data-spd="5.0">5x</button>
+      </div>
+    </div>
+
+    <div class="slider-wrap">
+      <input type="range" id="scrubber" min="0" max="0" value="0">
+    </div>
+  </div>
+
   <script>
+    const worldId = window.location.pathname.split('/').pop() || 'w1';
+    document.getElementById('title').prepend(worldId + ' • ');
+
     const canvas = document.getElementById('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) {
-      document.getElementById('sub').textContent = 'WebGL not supported by your browser.';
-    } else {
-      function resize() {
-        canvas.width = window.innerWidth * window.devicePixelRatio;
-        canvas.height = window.innerHeight * window.devicePixelRatio;
-        gl.viewport(0, 0, canvas.width, canvas.height);
+
+    let timeline = [];
+    let currentIndex = 0;
+    let isPlaying = false;
+    let playSpeed = 1.0;
+    let playTimer = null;
+    let cache = {};
+
+    // Camera State
+    let yaw = 0.75, pitch = 0.55, zoom = 0.015;
+    let panX = 0, panY = 0;
+    let isDragging = false, isPanning = false, lastMouseX = 0, lastMouseY = 0;
+
+    // WebGL setup
+    const vsSrc = `
+      attribute vec3 a_pos;
+      attribute vec3 a_norm;
+      attribute vec3 a_color;
+      uniform mat4 u_mvp;
+      varying vec3 v_color;
+      varying float v_light;
+      void main() {
+        gl_Position = u_mvp * vec4(a_pos, 1.0);
+        v_color = a_color;
+        vec3 lightDir = normalize(vec3(0.6, 0.9, 0.4));
+        v_light = max(0.35, dot(a_norm, lightDir));
       }
-      window.addEventListener('resize', resize);
-      resize();
+    `;
+    const fsSrc = `
+      precision mediump float;
+      varying vec3 v_color;
+      varying float v_light;
+      void main() {
+        gl_FragColor = vec4(v_color * v_light, 1.0);
+      }
+    `;
+
+    function createShader(gl, type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, createShader(gl, gl.VERTEX_SHADER, vsSrc));
+    gl.attachShader(prog, createShader(gl, gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const a_pos = gl.getAttribLocation(prog, 'a_pos');
+    const a_norm = gl.getAttribLocation(prog, 'a_norm');
+    const a_color = gl.getAttribLocation(prog, 'a_color');
+    const u_mvp = gl.getUniformLocation(prog, 'u_mvp');
+
+    const vbo = gl.createBuffer();
+    let vertexCount = 0;
+
+    function resize() {
+      canvas.width = window.innerWidth * window.devicePixelRatio;
+      canvas.height = window.innerHeight * window.devicePixelRatio;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK);
+
+    function hexToRgb(h) {
+      if (!h || h.length < 7) return [0.5, 0.5, 0.5];
+      return [
+        parseInt(h.substring(1, 3), 16) / 255,
+        parseInt(h.substring(3, 5), 16) / 255,
+        parseInt(h.substring(5, 7), 16) / 255
+      ];
+    }
+
+    // Build Voxel Mesh from chunks
+    function buildMesh(data) {
+      const palette = data.palette || [];
+      const colors = palette.map(hexToRgb);
+      const verts = [];
+
+      function addCube(x, y, z, col) {
+        // 6 faces of a unit cube [x, y, z] to [x+1, y+1, z+1]
+        const p0 = [x, y, z], p1 = [x+1, y, z], p2 = [x+1, y+1, z], p3 = [x, y+1, z];
+        const p4 = [x, y, z+1], p5 = [x+1, y, z+1], p6 = [x+1, y+1, z+1], p7 = [x, y+1, z+1];
+
+        function quad(a, b, c, d, norm) {
+          const tri = [a, b, c, a, c, d];
+          for (let i = 0; i < 6; i++) {
+            verts.push(tri[i][0], tri[i][1], tri[i][2], norm[0], norm[1], norm[2], col[0], col[1], col[2]);
+          }
+        }
+        quad(p4, p5, p6, p7, [0, 0, 1]); // Front
+        quad(p1, p0, p3, p2, [0, 0, -1]); // Back
+        quad(p3, p2, p6, p7, [0, 1, 0]); // Top
+        quad(p0, p1, p5, p4, [0, -1, 0]); // Bottom
+        quad(p5, p1, p2, p6, [1, 0, 0]); // Right
+        quad(p0, p4, p7, p3, [-1, 0, 0]); // Left
+      }
+
+      let totalVoxels = 0;
+      for (const ch of data.chunks || []) {
+        const cx = ch.cx * 16, cz = ch.cz * 16;
+        for (const vox of ch.voxels || []) {
+          const vx = cx + vox[0], vy = vox[1] - 60, vz = cz + vox[2];
+          const col = colors[vox[3]] || [0.5, 0.5, 0.5];
+          addCube(vx, vy, vz, col);
+          totalVoxels++;
+        }
+      }
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+      vertexCount = verts.length / 9;
+
+      const stride = 9 * 4;
+      gl.vertexAttribPointer(a_pos, 3, gl.FLOAT, false, stride, 0);
+      gl.enableVertexAttribArray(a_pos);
+      gl.vertexAttribPointer(a_norm, 3, gl.FLOAT, false, stride, 3 * 4);
+      gl.enableVertexAttribArray(a_norm);
+      gl.vertexAttribPointer(a_color, 3, gl.FLOAT, false, stride, 6 * 4);
+      gl.enableVertexAttribArray(a_color);
+
+      document.getElementById('stats').textContent = `${(data.chunks||[]).length} chunks loaded • ${totalVoxels.toLocaleString()} surface voxels`;
+    }
+
+    // Render loop
+    function render() {
       gl.clearColor(0.05, 0.07, 0.1, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      if (vertexCount > 0) {
+        const aspect = canvas.width / canvas.height;
+        const cy = Math.cos(yaw), sy = Math.sin(yaw);
+        const cp = Math.cos(pitch), sp = Math.sin(pitch);
+
+        const mvp = [
+          zoom * cy / aspect, zoom * sy * sp, zoom * sy * cp, 0,
+          0, zoom * cp, -zoom * sp, 0,
+          -zoom * sy / aspect, zoom * cy * sp, zoom * cy * cp, 0,
+          panX, panY, 0, 1
+        ];
+
+        gl.uniformMatrix4fv(u_mvp, false, new Float32Array(mvp));
+        gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
+      }
+
+      requestAnimationFrame(render);
     }
+    requestAnimationFrame(render);
+
+    // Fetch and show revision
+    async function loadRevision(revId) {
+      document.getElementById('rev-badge').textContent = revId;
+      if (cache[revId]) {
+        buildMesh(cache[revId]);
+        return;
+      }
+      try {
+        const res = await fetch(`/v1/worlds/${worldId}/voxels?rev=${encodeURIComponent(revId)}&radius=3`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        cache[revId] = data;
+        buildMesh(data);
+      } catch (err) {
+        document.getElementById('stats').textContent = 'Failed to load revision ' + revId + ': ' + err.message;
+      }
+    }
+
+    function setScrubIndex(idx) {
+      if (idx < 0 || idx >= timeline.length) return;
+      currentIndex = idx;
+      document.getElementById('scrubber').value = idx;
+      const rev = timeline[idx];
+      document.getElementById('rev-counter').textContent = `Rev ${idx + 1} / ${timeline.length} (Seq ${rev.seq})`;
+      const dt = rev.at ? new Date(rev.at * 1000).toLocaleString() : 'genesis';
+      document.getElementById('meta').textContent = `${rev.kind} • ${dt} • by ${rev.by || 'system'}`;
+      loadRevision(rev.id);
+    }
+
+    // Playback loop
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById('btn-play');
+      if (isPlaying) {
+        btn.textContent = '⏸ Pause';
+        btn.classList.add('on');
+        playStep();
+      } else {
+        btn.textContent = '▶ Play';
+        btn.classList.remove('on');
+        clearTimeout(playTimer);
+      }
+    }
+
+    function playStep() {
+      if (!isPlaying) return;
+      let next = currentIndex + 1;
+      if (next >= timeline.length) next = 0;
+      setScrubIndex(next);
+      const delay = Math.round(1000 / (2 * playSpeed));
+      playTimer = setTimeout(playStep, delay);
+    }
+
+    // Controls
+    document.getElementById('btn-play').onclick = togglePlay;
+    document.getElementById('btn-first').onclick = () => setScrubIndex(0);
+    document.getElementById('btn-last').onclick = () => setScrubIndex(timeline.length - 1);
+    document.getElementById('btn-prev').onclick = () => setScrubIndex(Math.max(0, currentIndex - 1));
+    document.getElementById('btn-next').onclick = () => setScrubIndex(Math.min(timeline.length - 1, currentIndex + 1));
+
+    document.querySelectorAll('[data-spd]').forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll('[data-spd]').forEach(x => x.classList.remove('on'));
+        b.classList.add('on');
+        playSpeed = parseFloat(b.dataset.spd);
+      };
+    });
+
+    const scrubber = document.getElementById('scrubber');
+    scrubber.oninput = () => {
+      if (isPlaying) togglePlay();
+      setScrubIndex(parseInt(scrubber.value));
+    };
+
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+      if (e.code === 'ArrowLeft') { setScrubIndex(Math.max(0, currentIndex - 1)); }
+      if (e.code === 'ArrowRight') { setScrubIndex(Math.min(timeline.length - 1, currentIndex + 1)); }
+    });
+
+    // Mouse Navigation
+    canvas.onmousedown = e => {
+      if (e.button === 0) isDragging = true;
+      if (e.button === 2) isPanning = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    };
+    window.addEventListener('mouseup', () => { isDragging = false; isPanning = false; });
+    window.addEventListener('contextmenu', e => e.preventDefault());
+    window.addEventListener('mousemove', e => {
+      if (isDragging) {
+        const dx = e.clientX - lastMouseX, dy = e.clientY - lastMouseY;
+        yaw += dx * 0.008;
+        pitch = Math.max(0.1, Math.min(1.4, pitch + dy * 0.008));
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      } else if (isPanning) {
+        const dx = e.clientX - lastMouseX, dy = e.clientY - lastMouseY;
+        panX += (dx / canvas.width) * 2;
+        panY -= (dy / canvas.height) * 2;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      }
+    });
+    canvas.addEventListener('wheel', e => {
+      zoom = Math.max(0.003, Math.min(0.08, zoom * (e.deltaY > 0 ? 0.9 : 1.1)));
+    });
+
+    // Initialize timeline
+    async function init() {
+      try {
+        const res = await fetch(`/v1/worlds/${worldId}/timeline`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        // Revisions come sorted descending by seq, reverse for chronological timeline
+        timeline = (data.revisions || []).slice().reverse();
+        if (timeline.length === 0) {
+          timeline = [{ id: data.head || `${worldId}:R_0000`, seq: 0, kind: 'GENESIS', at: null, by: 'system' }];
+        }
+        scrubber.max = timeline.length - 1;
+        setScrubIndex(timeline.length - 1);
+      } catch (err) {
+        document.getElementById('stats').textContent = 'Could not load timeline: ' + err.message;
+        // Fallback to head
+        timeline = [{ id: `${worldId}:R_0000`, seq: 0, kind: 'HEAD', at: null, by: 'system' }];
+        setScrubIndex(0);
+      }
+    }
+    init();
   </script>
 </body>
 </html>
