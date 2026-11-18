@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mcmesh 3D Voxel Viewer</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0c1015; color: #c9d1d9; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+    #header { position: absolute; top: 1rem; left: 1rem; z-index: 10; background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(8px); padding: 0.75rem 1.25rem; border-radius: 8px; border: 1px solid #30363d; }
+    h1 { margin: 0; font-size: 1.1rem; color: #58a6ff; }
+    p { margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #8b949e; }
+    #canvas { width: 100vw; height: 100vh; display: block; }
+    #controls { position: absolute; bottom: 1rem; right: 1rem; z-index: 10; background: rgba(22, 27, 34, 0.85); padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem; border: 1px solid #30363d; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1 id="title">mcmesh 3D Base Viewer</h1>
+    <p id="sub">Interactive WebGL Voxel Inspection</p>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div id="controls">Drag to rotate • Scroll to zoom • Right-drag to pan</div>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) {
+      document.getElementById('sub').textContent = 'WebGL not supported by your browser.';
+    } else {
+      function resize() {
+        canvas.width = window.innerWidth * window.devicePixelRatio;
+        canvas.height = window.innerHeight * window.devicePixelRatio;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+      gl.clearColor(0.05, 0.07, 0.1, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    }
+  </script>
+</body>
+</html>
